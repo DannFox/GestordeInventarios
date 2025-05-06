@@ -1,24 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
-import {jwtDecode} from "jwt-decode"; // Asegúrate de que esta biblioteca esté instalada
-
+import {jwtDecode} from "jwt-decode"; 
 const Dashboard = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); // Estado para verificar si el usuario es administrador
-  const [showAdminMenu, setShowAdminMenu] = useState(false); // Estado para mostrar/ocultar el menú de administración
-  const adminMenuRef = useRef(null); // Referencia al menú de administración
+  const [isAdmin, setIsAdmin] = useState(false); 
+  const [showAdminMenu, setShowAdminMenu] = useState(false); 
+  const adminMenuRef = useRef(null); 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
-        // Decodificar el token para obtener el rol del usuario
         const decodedToken = jwtDecode(token);
-        console.log("Decoded Token:", decodedToken); // Verifica el contenido del token
-        // Ajusta el campo según el contenido del token
+        console.log("Decoded Token:", decodedToken); 
         setIsAdmin(decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin");
       } catch (error) {
         console.error("Error al decodificar el token:", error);
@@ -48,11 +45,10 @@ const Dashboard = () => {
       });
   }, []);
 
-  // Manejar clics fuera del menú
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
-        setShowAdminMenu(false); // Ocultar el menú si se hace clic fuera de él
+        setShowAdminMenu(false); 
       }
     };
 
@@ -116,7 +112,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Encabezado */}
       <header className="bg-green-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-lg font-bold">Gestor de Inventario</h1>
