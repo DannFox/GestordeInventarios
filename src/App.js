@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Footer from "./Footer";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./PrivateRoute";
+import Register from "./pages/Register";
 
 const App = () => {
   return (
@@ -12,6 +13,9 @@ const App = () => {
         {/* Aquí van las rutas de la aplicación */}
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          {/* Ruta privada para el dashboard */}
           <Route 
           path="/dashboard"
           element={

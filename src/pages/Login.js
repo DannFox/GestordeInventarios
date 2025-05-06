@@ -38,13 +38,17 @@ const Login = () => {
     }
   };
 
+  const handleRegisterRedirect = () => {
+    navigate("/register"); // Redirige al componente Register
+  };
+
   return (
     <div className="min-h-[85vh] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-4">
       <div className="bg-white shadow-2xl rounded-2xl flex w-full max-w-4xl overflow-hidden">
         
         {/* Imagen o lado visual */}
         <div className="hidden md:flex flex-col justify-center items-center bg-blue-600 text-white w-1/2 p-8">
-        <img src="/icons8-inventory.gif" alt="Logo" className="mb-6 w-32 h-auto" />
+          <img src="/inventario.png" alt="Logo" className="mb-6 w-32 h-auto" />
           <h2 className="text-3xl font-bold mb-4">Bienvenido</h2>
           <p className="text-center">Ingresa a tu cuenta para acceder al sistema</p>
         </div>
@@ -81,6 +85,17 @@ const Login = () => {
               Iniciar sesión
             </button>
           </form>
+          <div className="mt-4 text-center">
+            <p className="text-gray-700">
+              ¿No tienes una cuenta?{" "}
+              <button
+                onClick={handleRegisterRedirect}
+                className="text-blue-600 hover:underline font-semibold"
+              >
+                Regístrate aquí
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
