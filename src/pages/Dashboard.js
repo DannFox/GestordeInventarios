@@ -1,17 +1,35 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { Pie } from "react-chartjs-2";
+import "chart.js/auto";
+import {jwtDecode} from "jwt-decode"; // Asegúrate de que esta biblioteca esté instalada
 
 const Dashboard = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false); // Estado para verificar si el usuario es administrador
+  const [showAdminMenu, setShowAdminMenu] = useState(false); // Estado para mostrar/ocultar el menú de administración
+  const adminMenuRef = useRef(null); // Referencia al menú de administración
 
   useEffect(() => {
-    const token = localStorage.getItem("token"); // Obtén el token del localStorage
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        // Decodificar el token para obtener el rol del usuario
+        const decodedToken = jwtDecode(token);
+        console.log("Decoded Token:", decodedToken); // Verifica el contenido del token
+        // Ajusta el campo según el contenido del token
+        setIsAdmin(decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin");
+      } catch (error) {
+        console.error("Error al decodificar el token:", error);
+      }
+    }
 
     fetch("http://localhost:5074/api/Products", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // Agrega el token al encabezado
+        Authorization: `Bearer ${token}`,
       },
     })
       .then((response) => {
@@ -30,6 +48,25 @@ const Dashboard = () => {
       });
   }, []);
 
+  // Manejar clics fuera del menú
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
+        setShowAdminMenu(false); // Ocultar el menú si se hace clic fuera de él
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-green-100">
@@ -38,14 +75,53 @@ const Dashboard = () => {
     );
   }
 
+  // Calcular estadísticas
+  const totalProductos = productos.length;
+  const totalStock = productos.reduce((sum, producto) => sum + producto.stock, 0);
+  const totalPrecio = productos.reduce((sum, producto) => sum + producto.precioUnitario * producto.stock, 0); // Precio total
+  const categorias = [...new Set(productos.map((producto) => producto.nombreCategoria))];
+
+  // Datos para el gráfico de pastel
+  const categoriasData = categorias.map((categoria) => {
+    const totalPorCategoria = productos
+      .filter((producto) => producto.nombreCategoria === categoria)
+      .reduce((sum, producto) => sum + producto.stock, 0);
+    return totalPorCategoria;
+  });
+
+  const pieChartData = {
+    labels: categorias,
+    datasets: [
+      {
+        data: categoriasData,
+        backgroundColor: [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+        ],
+        hoverBackgroundColor: [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF",
+          "#FF9F40",
+        ],
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-green-100">
-      {/* Encabezado del menú */}
+    <div className="min-h-screen bg-gray-100">
+      {/* Encabezado */}
       <header className="bg-green-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Gestor de Inventario</h1>
+          <h1 className="text-lg font-bold">Gestor de Inventario</h1>
           <nav>
-            <ul className="flex space-x-4">
+            <ul className="flex space-x-4 relative">
               <li>
                 <a href="/dashboard" className="hover:underline">
                   Dashboard
@@ -61,10 +137,48 @@ const Dashboard = () => {
                   Categorías
                 </a>
               </li>
+              {isAdmin && (
+                <li className="relative" ref={adminMenuRef}>
+                  <button
+                    onClick={() => setShowAdminMenu(!showAdminMenu)}
+                    className="hover:underline"
+                  >
+                    Administración
+                  </button>
+                  {showAdminMenu && (
+                    <ul className="absolute bg-white text-black shadow-md rounded-lg mt-2 p-2 space-y-2">
+                      <li>
+                        <a
+                          href="/admin/usuarios"
+                          className="hover:underline block px-4 py-2"
+                        >
+                          Gestión de Usuarios
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="/admin/reportes"
+                          className="hover:underline block px-4 py-2"
+                        >
+                          Generar Reportes
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href="/admin/configuracion"
+                          className="hover:underline block px-4 py-2"
+                        >
+                          Configuración del Sistema
+                        </a>
+                      </li>
+                    </ul>
+                  )}
+                </li>
+              )}
               <li>
-                <a href="/logout" className="hover:underline">
+                <button onClick={handleLogout} className="hover:underline">
                   Cerrar Sesión
-                </a>
+                </button>
               </li>
             </ul>
           </nav>
@@ -72,41 +186,35 @@ const Dashboard = () => {
       </header>
 
       {/* Contenido principal */}
-      <div className="p-8">
-        <h1 className="text-3xl font-bold mb-6 text-center">Inventario</h1>
-        <table className="table-auto w-full bg-white shadow-md rounded">
-          <thead>
-            <tr className="bg-green-200">
-              <th className="px-4 py-2">Nombre</th>
-              <th className="px-4 py-2">Descripción</th>
-              <th className="px-4 py-2">Precio Unitario</th>
-              <th className="px-4 py-2">Stock</th>
-              <th className="px-4 py-2">Fecha Creacion</th>
-              <th className="px-4 py-2">Categoria</th>
-            </tr>
-          </thead>
-          <tbody>
-            {productos.map((producto) => (
-              <tr key={producto.id} className="text-center border-b">
-                <td className="px-4 py-2">{producto.nombre}</td>
-                <td className="px-4 py-2">{producto.descripcion}</td>
-                <td className="px-4 py-2">
-                  {typeof producto.precioUnitario === "number"
-                    ? producto.precioUnitario.toLocaleString("es-EC", {
-                        style: "currency",
-                        currency: "USD",
-                      })
-                    : "N/A"}
-                </td>
-                <td className="px-4 py-2">{producto.stock}</td>
-                <td className="px-4 py-2">
-                  {new Date(producto.fechaCreacion).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-2">{producto.nombreCategoria}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-4 text-center">Resumen del Inventario</h1>
+
+        {/* Tarjetas de estadísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white shadow-md rounded-lg p-4 text-center">
+            <h2 className="text-xl font-bold text-green-600">{totalProductos}</h2>
+            <p className="text-gray-600 text-sm">Productos en total</p>
+          </div>
+          <div className="bg-white shadow-md rounded-lg p-4 text-center">
+            <h2 className="text-xl font-bold text-green-600">{totalStock}</h2>
+            <p className="text-gray-600 text-sm">Stock total</p>
+          </div>
+          <div className="bg-white shadow-md rounded-lg p-4 text-center">
+            <h2 className="text-xl font-bold text-green-600">
+              {totalPrecio.toLocaleString("es-EC", {
+                style: "currency",
+                currency: "USD",
+              })}
+            </h2>
+            <p className="text-gray-600 text-sm">Precio total</p>
+          </div>
+        </div>
+
+        {/* Gráfico de pastel */}
+        <div className="bg-white shadow-md rounded-lg p-4 max-w-md mx-auto">
+          <h2 className="text-lg font-bold text-center mb-4">Stock por Categoría</h2>
+          <Pie data={pieChartData} />
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -6,6 +6,14 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  // Verificar si el usuario ya tiene un token al cargar la página
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard"); // Redirige al Dashboard si el token existe
+    }
+  }, [navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,10 +44,6 @@ const Login = () => {
       setError("Error del servidor.");
       console.error(err);
     }
-  };
-
-  const handleRegisterRedirect = () => {
-    navigate("/register"); // Redirige al componente Register
   };
 
   return (
@@ -88,12 +92,12 @@ const Login = () => {
           <div className="mt-4 text-center">
             <p className="text-gray-700">
               ¿No tienes una cuenta?{" "}
-              <button
-                onClick={handleRegisterRedirect}
+              <a
+                href="/register"
                 className="text-blue-600 hover:underline font-semibold"
               >
                 Regístrate aquí
-              </button>
+              </a>
             </p>
           </div>
         </div>

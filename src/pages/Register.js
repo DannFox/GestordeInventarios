@@ -23,10 +23,15 @@ const Register = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:5074/api/Auth/register", {
+      const res = await fetch("http://localhost:5074/api/Usuario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, correo: email, contrasena: password }),
+        body: JSON.stringify({ 
+            nombre, 
+            correo: email, 
+            contrasena: password,
+        IdRol: 2 
+    }),
       });
 
       if (!res.ok) {
