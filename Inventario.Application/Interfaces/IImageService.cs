@@ -12,7 +12,7 @@ namespace Inventario.Application.Interfaces
     {
         Task<IEnumerable<ImagenResponseDTO>> GetAllAsync();
         Task<ImagenResponseDTO> GetByIdAsync(int id);
-        Task<string> UploadAsync(IFormFile file, int idProducto);
+        Task<string> UploadAsync(string url, int idProducto);
         Task DeleteAsync(int id);
     }
 }

@@ -16,16 +16,9 @@ namespace Inventario.Application.Services
     public class ImagenService : IImageService
     {
         private readonly InventarioDbContext _context;
-        private readonly string _imagePath;
-
-        public ImagenService(InventarioDbContext context, IWebHostEnvironment environment) 
+        public ImagenService(InventarioDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
-            _imagePath = Path.Combine(environment.WebRootPath, "uploads/images");
-            if (!Directory.Exists(_imagePath))
-            {
-                Directory.CreateDirectory(_imagePath);
-            }
         }
 
         public async Task DeleteAsync(int id)
@@ -34,12 +27,6 @@ namespace Inventario.Application.Services
             if (imagen == null)
             {
                 throw new Exception("Imagen no encontrada");
-            }
-
-            var filePath = Path.Combine(_imagePath, imagen.url);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
             }
 
             _context.Imagenes_Productos.Remove(imagen);
@@ -53,7 +40,7 @@ namespace Inventario.Application.Services
             {
                 IdImagen = i.id_imagen.ToString(),
                 IdProducto = i.id_producto.ToString(),
-                Url = $"/uploads/images/{i.url}"
+                Url = i.url // URL proporcionada por el frontend
             });
         }
 
@@ -69,41 +56,22 @@ namespace Inventario.Application.Services
             {
                 IdImagen = imagen.id_imagen.ToString(),
                 IdProducto = imagen.id_producto.ToString(),
-                Url = $"/uploads/images/{imagen.url}"
+                Url = imagen.url
             };
         }
 
-        public async Task<string> UploadAsync(IFormFile file, int idProducto)
+        public async Task<string> UploadAsync(string url, int idProducto)
         {
-            if (file.Length <= 0)
-            {
-                throw new Exception("El archivo está vacío");
-            }
-
-            var extension = Path.GetExtension(file.FileName).ToLower();
-            if (extension != ".jpg" && extension != ".png" && extension != ".jpeg")
-            {
-                throw new Exception("Formato de imagen no válido");
-            }
-
-            var fileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(_imagePath, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                file.CopyTo(stream);
-            }
-
             var nuevaImagen = new Imagenes_Productos
             {
                 id_producto = idProducto,
-                url = fileName
+                url = url // Guardar la URL proporcionada por el frontend
             };
 
             _context.Imagenes_Productos.Add(nuevaImagen);
             await _context.SaveChangesAsync();
 
-            return fileName;
+            return nuevaImagen.url;
         }
     }
 }

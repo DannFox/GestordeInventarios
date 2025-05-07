@@ -1,49 +1,50 @@
-﻿//using Inventario.Application.Interfaces;
-//using Inventario.Application.Services;
-//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Http;
-//using Microsoft.AspNetCore.Mvc;
+﻿using Inventario.Application.Interfaces;
+using Inventario.Application.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
-//namespace Inventario.API.API
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    //[Authorize]
-//    public class ImagenController : ControllerBase
-//    {
-//        private readonly IImageService _imagenService;
+namespace Inventario.API.API
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize]
+    public class ImagenController : ControllerBase
+    {
 
-//        public ImagenController(IImageService imagenService)
-//        {
-//            _imagenService = imagenService;
-//        }
+        private readonly IImageService _imagenService;
 
-//        [HttpGet]
-//        public async Task<IActionResult> GetAll()
-//        {
-//            var imagenes = await _imagenService.GetAllAsync();
-//            return Ok(imagenes);
-//        }
+        public ImagenController(IImageService imagenService)
+        {
+            _imagenService = imagenService;
+        }
 
-//        [HttpGet("{id}")]
-//        public async Task<IActionResult> GetById(int id)
-//        {
-//            var imagen = await _imagenService.GetByIdAsync(id);
-//            return Ok(imagen);
-//        }
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var imagenes = await _imagenService.GetAllAsync();
+            return Ok(imagenes);
+        }
 
-//        [HttpPost("{idProducto}")]
-//        public async Task<IActionResult> Upload([FromForm] IFormFile file, int idProducto)
-//        {
-//            var fileName = await _imagenService.UploadAsync(file, idProducto);
-//            return Ok(new { FileName = fileName });
-//        }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var imagen = await _imagenService.GetByIdAsync(id);
+            return Ok(imagen);
+        }
 
-//        [HttpDelete("{id}")]
-//        public async Task<IActionResult> Delete(int id)
-//        {
-//            await _imagenService.DeleteAsync(id);
-//            return Ok("Imagen eliminada exitosamente.");
-//        }
-//    }
-//}
+        [HttpPost("{idProducto}")]
+        public async Task<IActionResult> Upload([FromBody] string url, int idProducto)
+        {
+            var savedUrl = await _imagenService.UploadAsync(url, idProducto);
+            return Ok(new { Url = savedUrl });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _imagenService.DeleteAsync(id);
+            return Ok("Imagen eliminada exitosamente.");
+        }
+    }
+}

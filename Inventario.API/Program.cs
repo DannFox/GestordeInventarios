@@ -13,7 +13,6 @@ builder.Services.AddDbContext<InventarioDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IProductoService, ProductoService>();
-builder.Services.AddScoped<IMovimientoService, MovimientoService>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IRolService, RolService>();
 //builder.Services.AddScoped<IImageService, ImagenService>();

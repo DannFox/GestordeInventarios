@@ -15,7 +15,6 @@ namespace Inventario.Infraestructure.Data
         }
         public DbSet<Productos> Productos { get; set; }
         public DbSet<Categorias> Categorias { get; set; }
-        public DbSet<Movimientos> Movimientos { get; set; }
         public DbSet<Imagenes_Productos> Imagenes_Productos { get; set; }
         public DbSet<Usuarios> Usuarios { get; set; }
         public DbSet<Roles> Roles { get; set; }
@@ -45,22 +44,6 @@ namespace Inventario.Infraestructure.Data
             modelBuilder.Entity<Categorias>(entity =>
             {
                 entity.HasKey(e => e.id_categoria);
-            });
-
-            modelBuilder.Entity<Movimientos>(entity =>
-            {
-                entity.HasKey(e => e.id_movimiento);
-                entity.HasOne(m => m.productos)
-                    .WithMany()
-                    .HasForeignKey(m => m.id_producto)
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(m => m.usuarios)
-                    .WithMany()
-                    .HasForeignKey(m => m.id_usuario)
-                    .OnDelete(DeleteBehavior.Cascade);
-                entity.Property(g => g.tipo_movimiento)
-                      .IsRequired();
             });
 
             modelBuilder.Entity<Usuarios>(entity =>
