@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {

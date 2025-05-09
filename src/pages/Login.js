@@ -7,11 +7,10 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Verificar si el usuario ya tiene un token al cargar la página
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      navigate("/dashboard"); // Redirige al Dashboard si el token existe
+      navigate("/dashboard");
     }
   }, [navigate]);
 
