@@ -5,6 +5,9 @@ import Footer from "./Footer";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./PrivateRoute";
 import Register from "./pages/Register";
+import Productos from "./pages/Productos";
+import NuevoProducto from "./pages/NuevoProducto";
+import Categoria from "./pages/Categoria";
 import GestionUsuarios from "./pages/admin/GestionUsuarios";
 import GestionRoles from "./pages/admin/GestionRoles";
 import GestionCategorias from "./pages/admin/GestionCategorias";
@@ -27,6 +30,30 @@ const App = () => {
           element={
             <PrivateRoute>
               <Dashboard />
+            </PrivateRoute>
+          }
+          />
+          <Route
+          path="/productos"
+          element={
+            <PrivateRoute>
+              <Productos />
+            </PrivateRoute>
+          }
+          />
+          <Route
+          path="/productos/nuevo"
+          element={
+            <PrivateRoute>
+              <NuevoProducto />
+            </PrivateRoute>
+          }
+          />
+          <Route
+          path="/categorias"
+          element={
+            <PrivateRoute>
+              <Categoria />
             </PrivateRoute>
           }
           />

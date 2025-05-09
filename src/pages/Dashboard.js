@@ -113,7 +113,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-[calc(100vh-108px)] bg-gray-100">
       {/* Encabezado */}
       <header className="bg-green-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
@@ -121,19 +121,19 @@ const Dashboard = () => {
           <nav>
             <ul className="flex space-x-4 relative">
               <li>
-                <a href="/dashboard" className="hover:underline">
+                <Link to="/dashboard" className="hover:underline">
                   Dashboard
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/productos" className="hover:underline">
+                <Link to="/productos" className="hover:underline">
                   Productos
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/categorias" className="hover:underline">
+                <Link to="/categorias" className="hover:underline">
                   Categorías
-                </a>
+                </Link>
               </li>
               {isAdmin && (
                 <li className="relative" ref={adminMenuRef}>
