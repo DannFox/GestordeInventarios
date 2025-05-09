@@ -32,8 +32,7 @@ const Login = () => {
 
       if (!res.ok) {
         const data = await res.json();
-        console.error(data);
-        setError(data.message || "Credenciales inválidas.");
+        setError(data.error || "Credenciales invalidas.");
         return;
       }
 

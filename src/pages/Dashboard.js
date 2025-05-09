@@ -1,24 +1,23 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
-import {jwtDecode} from "jwt-decode"; // Asegúrate de que esta biblioteca esté instalada
+import {jwtDecode} from "jwt-decode";
+import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); // Estado para verificar si el usuario es administrador
-  const [showAdminMenu, setShowAdminMenu] = useState(false); // Estado para mostrar/ocultar el menú de administración
-  const adminMenuRef = useRef(null); // Referencia al menú de administración
+  const [isAdmin, setIsAdmin] = useState(false); 
+  const [showAdminMenu, setShowAdminMenu] = useState(false); 
+  const adminMenuRef = useRef(null); 
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
-        // Decodificar el token para obtener el rol del usuario
         const decodedToken = jwtDecode(token);
-        console.log("Decoded Token:", decodedToken); // Verifica el contenido del token
-        // Ajusta el campo según el contenido del token
+        console.log("Decoded Token:", decodedToken); 
         setIsAdmin(decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin");
       } catch (error) {
         console.error("Error al decodificar el token:", error);
@@ -48,11 +47,10 @@ const Dashboard = () => {
       });
   }, []);
 
-  // Manejar clics fuera del menú
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
-        setShowAdminMenu(false); // Ocultar el menú si se hace clic fuera de él
+        setShowAdminMenu(false); 
       }
     };
 
@@ -148,28 +146,19 @@ const Dashboard = () => {
                   {showAdminMenu && (
                     <ul className="absolute bg-white text-black shadow-md rounded-lg mt-2 p-2 space-y-2">
                       <li>
-                        <a
-                          href="/admin/usuarios"
-                          className="hover:underline block px-4 py-2"
-                        >
+                        <Link to="/admin/usuarios" className="hover:underline block px-4 py-2">
                           Gestión de Usuarios
-                        </a>
+                        </Link>
                       </li>
                       <li>
-                        <a
-                          href="/admin/reportes"
-                          className="hover:underline block px-4 py-2"
-                        >
-                          Generar Reportes
-                        </a>
+                        <Link to="/admin/roles" className="hover:underline block px-4 py-2">
+                          Gestión de Roles
+                        </Link>
                       </li>
                       <li>
-                        <a
-                          href="/admin/configuracion"
-                          className="hover:underline block px-4 py-2"
-                        >
-                          Configuración del Sistema
-                        </a>
+                        <Link to="/admin/categorias" className="hover:underline block px-4 py-2">
+                          Gestión de Categorías
+                        </Link>
                       </li>
                     </ul>
                   )}
