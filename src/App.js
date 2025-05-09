@@ -16,6 +16,7 @@ const App = () => {
     <Router>
       <div className="min-h-screen flex flex-col">
         {/* Aquí van las rutas de la aplicación */}
+        <div className="flex-grow">
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -58,6 +59,7 @@ const App = () => {
 
         {/* Pie de página visible en todas las rutas */}
         <Footer />
+        </div>
       </div>
     </Router>
   );

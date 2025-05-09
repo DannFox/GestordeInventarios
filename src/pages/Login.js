@@ -45,7 +45,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-4">
+    <div className="min-h-[calc(100vh-108px)] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-4">
       <div className="bg-white shadow-2xl rounded-2xl flex w-full max-w-4xl overflow-hidden">
         
         {/* Imagen o lado visual */}
