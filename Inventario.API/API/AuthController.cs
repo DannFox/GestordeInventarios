@@ -34,13 +34,13 @@ namespace Inventario.API.API
 
             if (user == null)
             {
-                return Unauthorized("Credenciales invalidas");
+                return Unauthorized(new {error = "Credenciales invalidas"});
             }
 
             var hashedPassword = PasswordHasher.HashPassword(request.Contrasena, user.salt);
 
             if (user.contrasena != hashedPassword)
-                return Unauthorized("Credenciales invalidas");
+                return Unauthorized(new { error = "Credenciales invalidas" });
 
             var token = GenerateJwtToken(user);
             return Ok(new { Token = token });
