@@ -1,27 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const NuevoProducto = () => {
   const [producto, setProducto] = useState({
     nombre: "",
-    nombreCategoria: "",
+    descripcion: "",
+    idCategoria: "",
     stock: 0,
     precioUnitario: 0,
   });
-  const [imagen, setImagen] = useState(null); // Archivo de imagen
+  const [categorias, setCategorias] = useState([]);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:5074/api/Categoria", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Error al obtener las categorías");
+        }
+        return response.json();
+      })
+      .then((data) => setCategorias(data))
+      .catch((error) => console.error("Error al obtener las categorías:", error));
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProducto({ ...producto, [name]: value });
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImagen(file); // Guardar el archivo de imagen en el estado
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -29,7 +42,6 @@ const NuevoProducto = () => {
     const token = localStorage.getItem("token");
 
     try {
-      // Paso 1: Crear el producto
       const responseProducto = await fetch("http://localhost:5074/api/Products", {
         method: "POST",
         headers: {
@@ -43,31 +55,6 @@ const NuevoProducto = () => {
         throw new Error("Error al agregar el producto");
       }
 
-      const productoCreado = await responseProducto.json();
-      const productoId = productoCreado.id; // Obtener el ID del producto creado
-
-      // Paso 2: Subir la imagen asociada al producto
-      if (imagen) {
-        const formData = new FormData();
-        formData.append("file", imagen);
-
-        const responseImagen = await fetch(
-          `http://localhost:5074/api/Imagen/${productoId}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          }
-        );
-
-        if (!responseImagen.ok) {
-          throw new Error("Error al subir la imagen");
-        }
-      }
-
-      // Redirigir a la lista de productos después de agregar
       navigate("/productos");
     } catch (error) {
       console.error("Error:", error);
@@ -99,15 +86,34 @@ const NuevoProducto = () => {
             />
           </div>
           <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">Descripción:</label>
+            <textarea
+              name="descripcion"
+              value={producto.descripcion}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border rounded"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">Categoría:</label>
-            <input
-              type="text"
-              name="nombreCategoria"
-              value={producto.nombreCategoria}
+            <select
+              name="idCategoria"
+              value={producto.idCategoria}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border rounded"
               required
-            />
+            >
+              <option value="" disabled>
+                Selecciona una categoría
+              </option>
+              {categorias.map((categoria) => (
+                <option key={categoria.id_categoria} value={categoria.id_categoria}>
+                  {categoria.nombre}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">Stock:</label>
@@ -131,15 +137,6 @@ const NuevoProducto = () => {
               onChange={handleInputChange}
               className="w-full px-3 py-2 border rounded"
               required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-bold mb-2">Imagen:</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="w-full px-3 py-2 border rounded"
             />
           </div>
           <div className="flex justify-between">
