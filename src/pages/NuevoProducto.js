@@ -42,6 +42,7 @@ const NuevoProducto = () => {
     const token = localStorage.getItem("token");
 
     try {
+      // Paso 1: Crear el producto
       const responseProducto = await fetch("http://localhost:5074/api/Products", {
         method: "POST",
         headers: {
@@ -55,6 +56,7 @@ const NuevoProducto = () => {
         throw new Error("Error al agregar el producto");
       }
 
+      console.log("Producto creado exitosamente");
       navigate("/productos");
     } catch (error) {
       console.error("Error:", error);

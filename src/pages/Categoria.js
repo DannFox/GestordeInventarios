@@ -5,15 +5,18 @@ const Categoria = () => {
   const [categorias, setCategorias] = useState([]);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); 
-  const navigate = useNavigate(); 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // Página actual
+  const [totalPages, setTotalPages] = useState(1); // Total de páginas
+  const pageSize = 10; // Tamaño de página
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
-        const decodedToken = JSON.parse(atob(token.split(".")[1])); 
+        const decodedToken = JSON.parse(atob(token.split(".")[1]));
         console.log("Decoded Token:", decodedToken);
         setIsAdmin(
           decodedToken[
@@ -25,28 +28,35 @@ const Categoria = () => {
       }
     }
 
-    fetch("http://localhost:5074/api/Categoria", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => {
+    const fetchCategorias = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5074/api/Categoria?Page=${currentPage}&PageSize=${pageSize}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         if (!response.ok) {
           throw new Error("Error al obtener las categorías");
         }
-        return response.json();
-      })
-      .then((data) => {
-        setCategorias(data);
+
+        const data = await response.json();
+        setCategorias(data.items || data); // Si la API devuelve `items`, úsalo; de lo contrario, usa `data`.
+        setTotalPages(data.totalPages || 1); // Si la API devuelve `totalPages`, úsalo; de lo contrario, asume 1.
         setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error al obtener las categorías:", error);
         setLoading(false);
-      });
-  }, []);
+      }
+    };
+
+    fetchCategorias();
+  }, [currentPage]); // Ejecutar el efecto cuando cambie la página actual
 
   const handleAddCategoria = () => {
     const token = localStorage.getItem("token");
@@ -124,6 +134,18 @@ const Categoria = () => {
       });
   };
 
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -134,7 +156,6 @@ const Categoria = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      {/* Botón para volver al Dashboard */}
       <div className="mb-4">
         <button
           onClick={() => navigate("/dashboard")}
@@ -144,14 +165,12 @@ const Categoria = () => {
         </button>
       </div>
 
-      {/* Título centrado */}
       <div className="flex justify-center items-center mb-6">
         <h1 className="text-2xl font-bold text-blue-600">
           Gestión de Categorías
         </h1>
       </div>
 
-      {/* Mostrar el formulario de agregar categoría solo si el usuario es Admin */}
       {isAdmin && (
         <div className="mb-6">
           <h2 className="text-xl font-bold text-blue-600 mb-4">Agregar Categoría</h2>
@@ -192,7 +211,7 @@ const Categoria = () => {
                     <button
                       onClick={() =>
                         handleUpdateCategoria(
-                          categoria.id,
+                          categoria.id_categoria,
                           prompt("Nuevo nombre de la categoría:", categoria.nombre)
                         )
                       }
@@ -212,6 +231,30 @@ const Categoria = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-lg ${
+            currentPage === 1 ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Anterior
+        </button>
+        <span className="text-lg font-bold">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-lg ${
+            currentPage === totalPages ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );

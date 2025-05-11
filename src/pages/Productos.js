@@ -4,58 +4,79 @@ import { useNavigate } from "react-router-dom";
 const Productos = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1); // Página actual
+  const [totalPages, setTotalPages] = useState(1); // Total de páginas
+  const pageSize = 10; // Tamaño de página
   const navigate = useNavigate();
 
-useEffect(() => {
-  const token = localStorage.getItem("token");
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
-  const fetchProductosYCategorias = async () => {
-    try {
-      const [productosResponse, categoriasResponse] = await Promise.all([
-        fetch("http://localhost:5074/api/Products", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-        fetch("http://localhost:5074/api/Categoria", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }),
-      ]);
+    const fetchProductosYCategorias = async () => {
+      try {
+        const [productosResponse, categoriasResponse] = await Promise.all([
+          fetch(`http://localhost:5074/api/Products?Page=${currentPage}&PageSize=${pageSize}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch("http://localhost:5074/api/Categoria", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
 
-      if (!productosResponse.ok || !categoriasResponse.ok) {
-        throw new Error("Error al obtener productos o categorías");
+        if (!productosResponse.ok || !categoriasResponse.ok) {
+          throw new Error("Error al obtener productos o categorías");
+        }
+
+        const productosData = await productosResponse.json();
+        const categoriasData = await categoriasResponse.json();
+
+        // Validar que productosData sea un arreglo
+        if (!Array.isArray(productosData)) {
+          console.error("La respuesta de productos no es un arreglo válido:", productosData);
+          setProductos([]); // Establecer productos como un arreglo vacío
+          setLoading(false);
+          return;
+        }
+
+        // Validar que categoriasData sea un arreglo
+        if (!Array.isArray(categoriasData)) {
+          console.error("La respuesta de categorías no es válida:", categoriasData);
+          setProductos([]); // Establecer productos como un arreglo vacío
+          setLoading(false);
+          return;
+        }
+
+        // Combina los productos con los nombres de las categorías
+        const productosConNombreCategoria = productosData.map((producto) => {
+          const categoria = categoriasData.find(
+            (cat) => cat.id_categoria === producto.idCategoria
+          );
+          return {
+            ...producto,
+            nombreCategoria: categoria ? categoria.nombre : "Sin categoría",
+          };
+        });
+
+        setProductos(productosConNombreCategoria);
+        setTotalPages(1); // Si no hay paginación en la respuesta, asumimos una sola página
+        setLoading(false);
+      } catch (error) {
+        console.error("Error al obtener productos y categorías:", error);
+        setProductos([]); // Establecer productos como un arreglo vacío en caso de error
+        setLoading(false);
       }
+    };
 
-      const productosData = await productosResponse.json();
-      const categoriasData = await categoriasResponse.json();
-
-      // Combina los productos con los nombres de las categorías
-      const productosConNombreCategoria = productosData.map((producto) => {
-        const categoria = categoriasData.find(
-          (cat) => cat.id_categoria === producto.idCategoria
-        );
-        return {
-          ...producto,
-          nombreCategoria: categoria ? categoria.nombre : "Sin categoría",
-        };
-      });
-
-      setProductos(productosConNombreCategoria);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error al obtener productos y categorías:", error);
-      setLoading(false);
-    }
-  };
-
-  fetchProductosYCategorias();
-}, []);
+    fetchProductosYCategorias();
+  }, [currentPage]); // Ejecutar el efecto cuando cambie la página actual
 
   const handleAddProduct = () => {
     navigate("/productos/nuevo"); // Redirige al formulario de agregar producto
@@ -65,20 +86,26 @@ useEffect(() => {
     navigate("/dashboard"); // Redirige al Dashboard
   };
 
-  const handleViewProduct = (id) => {
-    navigate(`/productos/${id}`); // Redirige a la página de detalles del producto
+  const handleViewProduct = (idProducto) => {
+    navigate(`/productos/${idProducto}`); // Redirige a la página de detalles del producto
   };
 
-  const handleEditProduct = (id) => {
-    navigate(`/productos/editar/${id}`); // Redirige al formulario de edición del producto
+  const handleEditProduct = (idProducto) => {
+    navigate(`/productos/editar/${idProducto}`); // Redirige al formulario de edición del producto
   };
 
-  const handleDeleteProduct = async (id) => {
+  const handleDeleteProduct = async (idProducto) => {
+    if (!idProducto) {
+      console.error("El ID del producto no es válido:", idProducto);
+      alert("No se pudo eliminar el producto. ID no válido.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
       try {
-        const response = await fetch(`http://localhost:5074/api/Products/${id}`, {
+        const response = await fetch(`http://localhost:5074/api/Products/${idProducto}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -86,16 +113,34 @@ useEffect(() => {
           },
         });
 
+        // Depuración: Imprimir la respuesta completa
+        console.log("Respuesta de la API al eliminar:", response);
+
         if (!response.ok) {
-          throw new Error("Error al eliminar el producto");
+          const errorData = await response.json(); // Intenta obtener el mensaje de error del servidor
+          console.error("Error al eliminar el producto:", errorData);
+          throw new Error(errorData.message || "Error al eliminar el producto");
         }
 
         // Actualiza la lista de productos después de eliminar
-        setProductos(productos.filter((producto) => producto.id !== id));
+        setProductos(productos.filter((producto) => producto.idProducto !== idProducto));
+        alert("Producto eliminado exitosamente.");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
         alert("No se pudo eliminar el producto. Inténtalo de nuevo.");
       }
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -140,7 +185,7 @@ useEffect(() => {
           </thead>
           <tbody>
             {productos.map((producto) => (
-              <tr key={producto.id} className="border-b">
+              <tr key={producto.idProducto} className="border-b">
                 <td className="px-4 py-2 text-center">{producto.nombre}</td>
                 <td className="px-4 py-2 text-center">{producto.descripcion}</td>
                 <td className="px-4 py-2 text-center">{producto.nombreCategoria}</td>
@@ -153,19 +198,19 @@ useEffect(() => {
                 </td>
                 <td className="px-4 py-2 text-center">
                   <button
-                    onClick={() => handleViewProduct(producto.id)}
+                    onClick={() => handleViewProduct(producto.idProducto)}
                     className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2"
                   >
                     Ver
                   </button>
                   <button
-                    onClick={() => handleEditProduct(producto.id)}
+                    onClick={() => handleEditProduct(producto.idProducto)}
                     className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
                   >
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDeleteProduct(producto.id)}
+                    onClick={() => handleDeleteProduct(producto.idProducto)}
                     className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                   >
                     Eliminar
@@ -175,6 +220,29 @@ useEffect(() => {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 rounded-lg ${
+            currentPage === 1 ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Anterior
+        </button>
+        <span className="text-lg font-bold">
+          Página {currentPage} de {totalPages}
+        </span>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 rounded-lg ${
+            currentPage === totalPages ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );

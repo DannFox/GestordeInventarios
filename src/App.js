@@ -7,6 +7,8 @@ import PrivateRoute from "./PrivateRoute";
 import Register from "./pages/Register";
 import Productos from "./pages/Productos";
 import NuevoProducto from "./pages/NuevoProducto";
+import EditarProducto from "./pages/EditarProducto";
+import VerProducto from "./pages/VerProducto";
 import Categoria from "./pages/Categoria";
 import GestionUsuarios from "./pages/admin/GestionUsuarios";
 import GestionRoles from "./pages/admin/GestionRoles";
@@ -46,6 +48,22 @@ const App = () => {
           element={
             <PrivateRoute>
               <NuevoProducto />
+            </PrivateRoute>
+          }
+          />
+          <Route
+          path="/productos/editar/:idProducto"
+          element={
+            <PrivateRoute>
+              <EditarProducto />
+            </PrivateRoute>
+          }
+          />
+          <Route
+          path="/productos/:idProducto"
+          element={
+            <PrivateRoute>
+              <VerProducto />
             </PrivateRoute>
           }
           />

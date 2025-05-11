@@ -7,9 +7,9 @@ import { Link } from "react-router-dom";
 const Dashboard = () => {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false); 
-  const [showAdminMenu, setShowAdminMenu] = useState(false); 
-  const adminMenuRef = useRef(null); 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
+  const adminMenuRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -17,40 +17,64 @@ const Dashboard = () => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        console.log("Decoded Token:", decodedToken); 
+        console.log("Decoded Token:", decodedToken);
         setIsAdmin(decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin");
       } catch (error) {
         console.error("Error al decodificar el token:", error);
       }
     }
 
-    fetch("http://localhost:5074/api/Products", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("No autorizado o error en la solicitud");
+    // Obtener productos y categorías
+    const fetchProductosYCategorias = async () => {
+      try {
+        const [productosResponse, categoriasResponse] = await Promise.all([
+          fetch("http://localhost:5074/api/Products", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+          fetch("http://localhost:5074/api/Categoria", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        ]);
+
+        if (!productosResponse.ok || !categoriasResponse.ok) {
+          throw new Error("Error al obtener productos o categorías");
         }
-        return response.json();
-      })
-      .then((data) => {
-        setProductos(data);
+
+        const productosData = await productosResponse.json();
+        const categoriasData = await categoriasResponse.json();
+
+        // Mapear idCategoria a nombreCategoria en los productos
+        const productosConNombreCategoria = productosData.map((producto) => {
+          const categoria = categoriasData.find((cat) => cat.id_categoria === producto.idCategoria);
+          return {
+            ...producto,
+            nombreCategoria: categoria ? categoria.nombre : "Sin categoría",
+          };
+        });
+
+        setProductos(productosConNombreCategoria);
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error al obtener los productos:", error);
+      } catch (error) {
+        console.error("Error al obtener productos y categorías:", error);
         setLoading(false);
-      });
+      }
+    };
+
+    fetchProductosYCategorias();
   }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (adminMenuRef.current && !adminMenuRef.current.contains(event.target)) {
-        setShowAdminMenu(false); 
+        setShowAdminMenu(false);
       }
     };
 
@@ -76,11 +100,11 @@ const Dashboard = () => {
   // Calcular estadísticas
   const totalProductos = productos.length;
   const totalStock = productos.reduce((sum, producto) => sum + producto.stock, 0);
-  const totalPrecio = productos.reduce((sum, producto) => sum + producto.precioUnitario * producto.stock, 0); // Precio total
-  const categorias = [...new Set(productos.map((producto) => producto.nombreCategoria))];
+  const totalPrecio = productos.reduce((sum, producto) => sum + producto.precioUnitario * producto.stock, 0);
 
-  // Datos para el gráfico de pastel
-  const categoriasData = categorias.map((categoria) => {
+  // Calcular datos para el gráfico de pastel
+  const categoriasUnicas = [...new Set(productos.map((producto) => producto.nombreCategoria))];
+  const categoriasData = categoriasUnicas.map((categoria) => {
     const totalPorCategoria = productos
       .filter((producto) => producto.nombreCategoria === categoria)
       .reduce((sum, producto) => sum + producto.stock, 0);
@@ -88,7 +112,7 @@ const Dashboard = () => {
   });
 
   const pieChartData = {
-    labels: categorias,
+    labels: categoriasUnicas,
     datasets: [
       {
         data: categoriasData,
@@ -153,11 +177,6 @@ const Dashboard = () => {
                       <li>
                         <Link to="/admin/roles" className="hover:underline block px-4 py-2">
                           Gestión de Roles
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/admin/categorias" className="hover:underline block px-4 py-2">
-                          Gestión de Categorías
                         </Link>
                       </li>
                     </ul>
