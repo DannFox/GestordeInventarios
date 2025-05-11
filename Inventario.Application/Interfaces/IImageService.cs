@@ -10,9 +10,9 @@ namespace Inventario.Application.Interfaces
 {
     public interface IImageService
     {
-        Task<IEnumerable<ImagenResponseDTO>> GetAllAsync();
+        Task<IEnumerable<ImagenResponseDTO>> GetAllAsync(int Page, int PageSize);
         Task<ImagenResponseDTO> GetByIdAsync(int id);
-        Task<string> UploadAsync(string url, int idProducto);
+        Task<string> UploadAsync(ImagenCreateDTO imagenDto);
         Task DeleteAsync(int id);
     }
 }

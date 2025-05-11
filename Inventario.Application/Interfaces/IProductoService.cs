@@ -9,7 +9,7 @@ namespace Inventario.Domain.Interfaces
 {
     public interface IProductoService
     {
-        Task<IEnumerable<ProductoUpdateDTO>> GetAllAsync();
+        Task<(IEnumerable<ProductoUpdateDTO> Productos, int TotalItems)> GetAllAsync(int Page, int PageSize);
         Task<ProductoUpdateDTO> GetByIdAsync(int id);
         Task CreateAsync(ProductoCreateDTO producto);
         Task UpdateAsync(ProductoUpdateDTO producto);

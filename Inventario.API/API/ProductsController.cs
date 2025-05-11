@@ -19,11 +19,22 @@ namespace Inventario.API.API
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int Page = 1, [FromQuery] int PageSize = 10)
         {
-            var products = await _productService.GetAllAsync();
-            return Ok(products);
+            var (productos, totalItems) = await _productService.GetAllAsync(Page, PageSize);
+
+            // Calcular el número total de páginas
+            var totalPages = (int)Math.Ceiling(totalItems / (double)PageSize);
+
+            // Agregar headers de paginación
+            Response.Headers.Add("X-Total-Count", totalItems.ToString());
+            Response.Headers.Add("X-Total-Pages", totalPages.ToString());
+            Response.Headers.Add("X-Current-Page", Page.ToString());
+            Response.Headers.Add("X-Page-Size", PageSize.ToString());
+
+            return Ok(productos);
         }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)

@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Inventario.Application.Services
 {
@@ -24,17 +25,24 @@ namespace Inventario.Application.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<UsuarioResponseDTO>> GetAllAsync()
+        public async Task<(IEnumerable<UsuarioResponseDTO> Usuarios, int TotalItems)> GetAllAsync(int Page, int PageSize)
         {
-            var usuarios = await _context.Usuarios.Include(u => u.roles).ToListAsync();
+            var totalItems = await _context.Usuarios.CountAsync(); // Total de usuarios
+            var usuarios = await _context.Usuarios
+                .Include(u => u.roles)
+                .Skip((Page - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
 
-            return usuarios.Select(u => new UsuarioResponseDTO
+            var usuariosDto = usuarios.Select(u => new UsuarioResponseDTO
             {
                 IdUsuario = u.id_usuario,
                 Nombre = u.nombre,
                 Correo = u.correo,
                 Rol = u.roles.nombre
             });
+
+            return (usuariosDto, totalItems);
         }
 
         public async Task<UsuarioResponseDTO> GetByIdAsync(int id)

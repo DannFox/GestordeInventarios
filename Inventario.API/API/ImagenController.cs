@@ -1,4 +1,5 @@
-﻿using Inventario.Application.Interfaces;
+﻿using Inventario.Application.DTOs;
+using Inventario.Application.Interfaces;
 using Inventario.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,9 +21,9 @@ namespace Inventario.API.API
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int Page = 1, [FromQuery] int PageSize = 10)
         {
-            var imagenes = await _imagenService.GetAllAsync();
+            var imagenes = await _imagenService.GetAllAsync(Page, PageSize);
             return Ok(imagenes);
         }
 
@@ -34,10 +35,10 @@ namespace Inventario.API.API
         }
 
         [HttpPost("{idProducto}")]
-        public async Task<IActionResult> Upload([FromBody] string url, int idProducto)
+        public async Task<IActionResult> Upload([FromForm] ImagenCreateDTO imagenDto)
         {
-            var savedUrl = await _imagenService.UploadAsync(url, idProducto);
-            return Ok(new { Url = savedUrl });
+            var savedPath = await _imagenService.UploadAsync(imagenDto);
+            return Ok(new { Path = savedPath });
         }
 
         [HttpDelete("{id}")]

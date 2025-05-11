@@ -65,6 +65,8 @@ app.UseCors("AllowFrontEnd");
 
 app.UseDeveloperExceptionPage();
 
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

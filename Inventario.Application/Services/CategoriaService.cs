@@ -1,6 +1,7 @@
 ﻿using Inventario.Application.DTOs;
 using Inventario.Domain.Entities;
 using Inventario.Infraestructure.Data;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections;
@@ -20,10 +21,17 @@ namespace Inventario.Application.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<Categorias>> GetAllAsync()
+        public async Task<(IEnumerable<Categorias> Categorias, int TotalItems)> GetAllAsync(int Page, int PageSize)
         {
-            return await _context.Categorias.ToListAsync();
+            var totalItems = await _context.Categorias.CountAsync(); // Total de categorías
+            var categorias = await _context.Categorias
+                .Skip((Page - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
+
+            return (categorias, totalItems);
         }
+
         public async Task<Categorias> GetByIdAsync(int id)
         {
             var categoria = await _context.Categorias.FindAsync(id);

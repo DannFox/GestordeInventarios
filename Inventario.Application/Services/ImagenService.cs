@@ -29,13 +29,20 @@ namespace Inventario.Application.Services
                 throw new Exception("Imagen no encontrada");
             }
 
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", imagen.url.TrimStart('/'));
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+
             _context.Imagenes_Productos.Remove(imagen);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<ImagenResponseDTO>> GetAllAsync()
+        public async Task<IEnumerable<ImagenResponseDTO>> GetAllAsync(int Page, int PageSize)
         {
-            var imagenes = await _context.Imagenes_Productos.ToListAsync();
+            var imagenes = await _context.Imagenes_Productos
+                .Skip((Page - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
             return imagenes.Select(i => new ImagenResponseDTO
             {
                 IdImagen = i.id_imagen.ToString(),
@@ -60,12 +67,27 @@ namespace Inventario.Application.Services
             };
         }
 
-        public async Task<string> UploadAsync(string url, int idProducto)
+        public async Task<string> UploadAsync(ImagenCreateDTO imagenDto)
         {
+            if (imagenDto.Imagen == null || imagenDto.Imagen.Length == 0)
+                throw new ArgumentException("El archivo de imagen no es válido");
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "imagenes");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}_{imagenDto.Imagen.FileName}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imagenDto.Imagen.CopyToAsync(stream);
+            }
+
             var nuevaImagen = new Imagenes_Productos
             {
-                id_producto = idProducto,
-                url = url // Guardar la URL proporcionada por el frontend
+                id_imagen = imagenDto.IdProducto,
+                url = $"/imagenes/{uniqueFileName}"
             };
 
             _context.Imagenes_Productos.Add(nuevaImagen);

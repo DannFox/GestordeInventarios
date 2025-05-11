@@ -22,21 +22,20 @@ namespace Inventario.API.API
 
         [HttpGet]
         [Authorize(Roles = "Admin")] // Solo los usuarios con el rol "Admin" pueden acceder
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int Page = 1, [FromQuery] int PageSize = 10)
         {
-            var usuarios = await _usuarioService.GetAllAsync();
-            return Ok(usuarios);
-        }
+            var (usuarios, totalItems) = await _usuarioService.GetAllAsync(Page, PageSize);
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var usuario = await _usuarioService.GetByIdAsync(id);
-            if (usuario == null)
-            {
-                return NotFound("Usuario no encontrado.");
-            }
-            return Ok(usuario);
+            // Calcular el número total de páginas
+            var totalPages = (int)Math.Ceiling(totalItems / (double)PageSize);
+
+            // Agregar encabezados de paginación
+            Response.Headers.Add("X-Total-Count", totalItems.ToString());
+            Response.Headers.Add("X-Total-Pages", totalPages.ToString());
+            Response.Headers.Add("X-Current-Page", Page.ToString());
+            Response.Headers.Add("X-Page-Size", PageSize.ToString());
+
+            return Ok(usuarios);
         }
 
         [HttpPost]

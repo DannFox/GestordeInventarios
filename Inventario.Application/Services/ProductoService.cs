@@ -43,10 +43,15 @@ namespace Inventario.Application.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<ProductoUpdateDTO>> GetAllAsync()
+        public async Task<(IEnumerable<ProductoUpdateDTO> Productos, int TotalItems)> GetAllAsync(int Page, int PageSize)
         {
-            var productos = await _context.Productos.Include(p => p.categorias).ToListAsync();
-            return productos.Select(p => new ProductoUpdateDTO
+            var totalItems = await _context.Productos.CountAsync(); // Total de productos
+            var productos = await _context.Productos.Include(p => p.categorias)
+                .Skip((Page - 1) * PageSize)
+                .Take(PageSize)
+                .ToListAsync();
+
+            var productosDto = productos.Select(p => new ProductoUpdateDTO
             {
                 IdProducto = p.id_producto,
                 Nombre = p.nombre,
@@ -55,7 +60,10 @@ namespace Inventario.Application.Services
                 Stock = p.stock,
                 IdCategoria = p.id_categoria
             });
+
+            return (productosDto, totalItems);
         }
+
 
         public async Task<ProductoUpdateDTO> GetByIdAsync(int id)
         {
