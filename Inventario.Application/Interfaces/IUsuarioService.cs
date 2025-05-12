@@ -13,5 +13,8 @@ namespace Inventario.Application.Interfaces
 
         Task<UsuarioResponseDTO> GetByIdAsync(int id);
         Task CreateAsync(UsuarioCreateDTO usuario);
+
+        Task RestablecerCorreoAsync(int idUsuario, UsuarioUpdateCorreoDTO dto);
+        Task RestablecerContrasenaAsync(int idUsuario, UsuarioUpdateContrasenaDTO dto);
     }
 }

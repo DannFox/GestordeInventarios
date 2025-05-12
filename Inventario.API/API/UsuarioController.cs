@@ -52,5 +52,35 @@ namespace Inventario.API.API
                 return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage).ToList() });
             }
         }
+
+        [HttpPut("{id}/CambiarEmail")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestablecerCorreo(int id, [FromBody] UsuarioUpdateCorreoDTO dto)
+        {
+            try
+            {
+                await _usuarioService.RestablecerCorreoAsync(id, dto);
+                return Ok("Correo actualizado exitosamente");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}/CambiarPassword")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RestablecerContrasena(int id, [FromBody] UsuarioUpdateContrasenaDTO dto)
+        {
+            try
+            {
+                await _usuarioService.RestablecerContrasenaAsync(id, dto);
+                return Ok("Contraseña actualizada correctamente.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+        }
     }
 }

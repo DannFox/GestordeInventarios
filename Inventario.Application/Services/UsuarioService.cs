@@ -92,5 +92,35 @@ namespace Inventario.Application.Services
             // Comparar el hash con el almacenado
             return usuario.contrasena == hashedPassword;
         }
+
+        public async Task RestablecerCorreoAsync(int idUsuario, UsuarioUpdateCorreoDTO dto)
+        {
+            var usuario = await _context.Usuarios.FindAsync(idUsuario);
+            if (usuario == null)
+                throw new KeyNotFoundException("Usuario no encontrado");
+
+            if (!string.IsNullOrWhiteSpace(dto.Correo) && usuario.correo != dto.Correo)
+                usuario.correo = dto.Correo;
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RestablecerContrasenaAsync(int idUsuario, UsuarioUpdateContrasenaDTO dto)
+        {
+            var usuario = await _context.Usuarios.FindAsync(idUsuario);
+            if (usuario == null)
+                throw new KeyNotFoundException("Usuario no encontrado");
+            
+            if (!string.IsNullOrWhiteSpace(dto.NuevaContrasena))
+            {
+                var salt = PasswordHasher.GenerateSalt();
+                usuario.salt = salt;
+                usuario.contrasena = PasswordHasher.HashPassword(dto.NuevaContrasena, salt);
+            }
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+        }
     }
 }
