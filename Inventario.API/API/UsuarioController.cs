@@ -96,5 +96,13 @@ namespace Inventario.API.API
                 return NotFound(new { Error = ex.Message });
             }
         }
+
+        [HttpGet("PorRol/{idRol}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetByRol(int idRol)
+        {
+            var usuarios = await _usuarioService.GetByRolAsync(idRol);
+            return Ok(usuarios);
+        }
     }
 }

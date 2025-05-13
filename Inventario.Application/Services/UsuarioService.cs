@@ -132,5 +132,20 @@ namespace Inventario.Application.Services
             _context.Usuarios.Remove(usuario);
             await _context.SaveChangesAsync();
         }
+        public async Task<IEnumerable<UsuarioResponseDTO>> GetByRolAsync(int idRol)
+        {
+            var usuario = await _context.Usuarios
+                .Include(u => u.roles)
+                .Where(u => u.id_rol == idRol)
+                .ToListAsync();
+
+            return usuario.Select(u => new UsuarioResponseDTO
+            {
+                IdUsuario = u.id_usuario,
+                Nombre = u.nombre,
+                Correo = u.correo,
+                Rol = u.roles.nombre,
+            });
+        }
     }
 }
