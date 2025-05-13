@@ -6,11 +6,25 @@ const Productos = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1); // Página actual
   const [totalPages, setTotalPages] = useState(1); // Total de páginas
+  const [isAdmin, setIsAdmin] = useState(false); // Estado para verificar si el usuario es admin
   const pageSize = 10; // Tamaño de página
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const decodedToken = JSON.parse(atob(token.split(".")[1]));
+        setIsAdmin(
+          decodedToken[
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          ] === "Admin"
+        );
+      } catch (error) {
+        console.error("Error al decodificar el token:", error);
+      }
+    }
 
     const fetchProductosYCategorias = async () => {
       try {
@@ -38,23 +52,6 @@ const Productos = () => {
         const productosData = await productosResponse.json();
         const categoriasData = await categoriasResponse.json();
 
-        // Validar que productosData sea un arreglo
-        if (!Array.isArray(productosData)) {
-          console.error("La respuesta de productos no es un arreglo válido:", productosData);
-          setProductos([]); // Establecer productos como un arreglo vacío
-          setLoading(false);
-          return;
-        }
-
-        // Validar que categoriasData sea un arreglo
-        if (!Array.isArray(categoriasData)) {
-          console.error("La respuesta de categorías no es válida:", categoriasData);
-          setProductos([]); // Establecer productos como un arreglo vacío
-          setLoading(false);
-          return;
-        }
-
-        // Combina los productos con los nombres de las categorías
         const productosConNombreCategoria = productosData.map((producto) => {
           const categoria = categoriasData.find(
             (cat) => cat.id_categoria === producto.idCategoria
@@ -70,33 +67,32 @@ const Productos = () => {
         setLoading(false);
       } catch (error) {
         console.error("Error al obtener productos y categorías:", error);
-        setProductos([]); // Establecer productos como un arreglo vacío en caso de error
+        setProductos([]);
         setLoading(false);
       }
     };
 
     fetchProductosYCategorias();
-  }, [currentPage]); // Ejecutar el efecto cuando cambie la página actual
+  }, [currentPage]);
 
   const handleAddProduct = () => {
-    navigate("/productos/nuevo"); // Redirige al formulario de agregar producto
+    navigate("/productos/nuevo");
   };
 
   const handleGoToDashboard = () => {
-    navigate("/dashboard"); // Redirige al Dashboard
+    navigate("/dashboard");
   };
 
   const handleViewProduct = (idProducto) => {
-    navigate(`/productos/${idProducto}`); // Redirige a la página de detalles del producto
+    navigate(`/productos/${idProducto}`);
   };
 
   const handleEditProduct = (idProducto) => {
-    navigate(`/productos/editar/${idProducto}`); // Redirige al formulario de edición del producto
+    navigate(`/productos/editar/${idProducto}`);
   };
 
   const handleDeleteProduct = async (idProducto) => {
     if (!idProducto) {
-      console.error("El ID del producto no es válido:", idProducto);
       alert("No se pudo eliminar el producto. ID no válido.");
       return;
     }
@@ -113,16 +109,10 @@ const Productos = () => {
           },
         });
 
-        // Depuración: Imprimir la respuesta completa
-        console.log("Respuesta de la API al eliminar:", response);
-
         if (!response.ok) {
-          const errorData = await response.json(); // Intenta obtener el mensaje de error del servidor
-          console.error("Error al eliminar el producto:", errorData);
-          throw new Error(errorData.message || "Error al eliminar el producto");
+          throw new Error("Error al eliminar el producto");
         }
 
-        // Actualiza la lista de productos después de eliminar
         setProductos(productos.filter((producto) => producto.idProducto !== idProducto));
         alert("Producto eliminado exitosamente.");
       } catch (error) {
@@ -164,12 +154,14 @@ const Productos = () => {
         >
           Ir al Dashboard
         </button>
-        <button
-          onClick={handleAddProduct}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300"
-        >
-          Agregar Producto
-        </button>
+        {isAdmin && (
+          <button
+            onClick={handleAddProduct}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300"
+          >
+            Agregar Producto
+          </button>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
@@ -203,18 +195,22 @@ const Productos = () => {
                   >
                     Ver
                   </button>
-                  <button
-                    onClick={() => handleEditProduct(producto.idProducto)}
-                    className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDeleteProduct(producto.idProducto)}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                  >
-                    Eliminar
-                  </button>
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => handleEditProduct(producto.idProducto)}
+                        className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(producto.idProducto)}
+                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

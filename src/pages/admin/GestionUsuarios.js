@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -6,6 +7,7 @@ const GestionUsuarios = () => {
   const [currentPage, setCurrentPage] = useState(1); // Página actual
   const [totalPages, setTotalPages] = useState(1); // Total de páginas
   const pageSize = 10; // Tamaño de página
+  const navigate = useNavigate(); // Hook para navegación
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -41,18 +43,18 @@ const GestionUsuarios = () => {
   }, [currentPage]); // Ejecutar el efecto cuando cambie la página actual
 
   const handleChangePassword = (id) => {
-    const nuevaPassword = prompt("Ingresa la nueva contraseña:");
-    if (!nuevaPassword) return;
+    const nuevaContrasena = prompt("Ingresa la nueva contraseña:");
+    if (!nuevaContrasena) return;
 
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:5074/api/Usuarios/${id}/CambiarPassword`, {
+    fetch(`http://localhost:5074/api/Usuario/${id}/CambiarPassword`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ nuevaPassword }),
+      body: JSON.stringify({ nuevaContrasena }), // Cambiado a "nuevaContrasena"
     })
       .then((response) => {
         if (!response.ok) {
@@ -67,29 +69,37 @@ const GestionUsuarios = () => {
   };
 
   const handleChangeEmail = (id) => {
-    const nuevoEmail = prompt("Ingresa el nuevo correo electrónico:");
-    if (!nuevoEmail) return;
+    const correo = prompt("Ingresa el nuevo correo electrónico:");
+    if (!correo) return;
 
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:5074/api/Usuarios/${id}/CambiarEmail`, {
+    fetch(`http://localhost:5074/api/Usuario/${id}/CambiarEmail`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ nuevoEmail }),
+      body: JSON.stringify({ correo }), // Usando el parámetro "correo"
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
           throw new Error("Error al cambiar el correo");
         }
-        return response.json();
+
+        // Intenta leer la respuesta como JSON
+        try {
+          return await response.json();
+        } catch {
+          // Si la respuesta no es JSON, devuelve el correo enviado
+          return { correo };
+        }
       })
-      .then((usuarioActualizado) => {
+      .then((data) => {
+        // Actualiza el estado local con el nuevo correo
         setUsuarios(
           usuarios.map((usuario) =>
-            usuario.id === id ? { ...usuario, email: usuarioActualizado.email } : usuario
+            usuario.idUsuario === id ? { ...usuario, correo: data.correo } : usuario
           )
         );
         alert("Correo actualizado exitosamente.");
@@ -147,6 +157,16 @@ const GestionUsuarios = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
+      {/* Botón para regresar al dashboard */}
+      <div className="mb-4">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+        >
+          Volver al Dashboard
+        </button>
+      </div>
+
       <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
         Gestión de Usuarios
       </h1>
@@ -161,33 +181,35 @@ const GestionUsuarios = () => {
             </tr>
           </thead>
           <tbody>
-            {usuarios.map((usuario) => (
-              <tr key={usuario.id} className="border-b">
-                <td className="px-4 py-2 text-center">{usuario.nombre}</td>
-                <td className="px-4 py-2 text-center">{usuario.correo}</td>
-                <td className="px-4 py-2 text-center">{usuario.rol}</td>
-                <td className="px-4 py-2 text-center">
-                  <button
-                    onClick={() => handleChangePassword(usuario.id)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2"
-                  >
-                    Cambiar Contraseña
-                  </button>
-                  <button
-                    onClick={() => handleChangeEmail(usuario.id)}
-                    className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
-                  >
-                    Cambiar Correo
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUsuario(usuario.id)}
-                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {usuarios.map((usuario) => {
+              return (
+                <tr key={usuario.idUsuario} className="border-b">
+                  <td className="px-4 py-2 text-center">{usuario.nombre}</td>
+                  <td className="px-4 py-2 text-center">{usuario.correo}</td>
+                  <td className="px-4 py-2 text-center">{usuario.rol}</td>
+                  <td className="px-4 py-2 text-center">
+                    <button
+                      onClick={() => handleChangePassword(usuario.idUsuario)}
+                      className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2"
+                    >
+                      Cambiar Contraseña
+                    </button>
+                    <button
+                      onClick={() => handleChangeEmail(usuario.idUsuario)}
+                      className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
+                    >
+                      Cambiar Correo
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUsuario(usuario.idUsuario)}
+                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
