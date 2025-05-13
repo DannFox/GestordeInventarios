@@ -12,7 +12,6 @@ import VerProducto from "./pages/VerProducto";
 import Categoria from "./pages/Categoria";
 import GestionUsuarios from "./pages/admin/GestionUsuarios";
 import GestionRoles from "./pages/admin/GestionRoles";
-import GestionCategorias from "./pages/admin/GestionCategorias";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 
@@ -89,14 +88,6 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <GestionRoles />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/categorias"
-            element={
-              <ProtectedRoute>
-                <GestionCategorias />
               </ProtectedRoute>
             }
           />

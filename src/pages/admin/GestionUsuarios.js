@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 const GestionUsuarios = () => {
@@ -6,41 +6,44 @@ const GestionUsuarios = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1); // Página actual
   const [totalPages, setTotalPages] = useState(1); // Total de páginas
+  const [showModal, setShowModal] = useState(false); // Estado para mostrar/ocultar el modal
+  const [newUser, setNewUser] = useState({ nombre: "", correo: "", rol: "" }); // Estado para el nuevo usuario
   const pageSize = 10; // Tamaño de página
   const navigate = useNavigate(); // Hook para navegación
 
-  useEffect(() => {
+  // Envolver fetchUsuarios en useCallback
+  const fetchUsuarios = useCallback(async () => {
     const token = localStorage.getItem("token");
 
-    const fetchUsuarios = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:5074/api/Usuario?Page=${currentPage}&PageSize=${pageSize}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Error al obtener los usuarios");
+    try {
+      const response = await fetch(
+        `http://localhost:5074/api/Usuario?Page=${currentPage}&PageSize=${pageSize}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        const data = await response.json();
-        setUsuarios(data.items || data); // Si la API devuelve `items`, úsalo; de lo contrario, usa `data`.
-        setTotalPages(data.totalPages || 1); // Si la API devuelve `totalPages`, úsalo; de lo contrario, asume 1.
-        setLoading(false);
-      } catch (error) {
-        console.error("Error al obtener los usuarios:", error);
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Error al obtener los usuarios");
       }
-    };
 
+      const data = await response.json();
+      setUsuarios(data.items || data); // Actualiza la lista de usuarios
+      setTotalPages(data.totalPages || 1); // Actualiza el total de páginas
+      setLoading(false);
+    } catch (error) {
+      console.error("Error al obtener los usuarios:", error);
+      setLoading(false);
+    }
+  }, [currentPage, pageSize]); // Dependencias del useCallback
+
+  useEffect(() => {
     fetchUsuarios();
-  }, [currentPage]); // Ejecutar el efecto cuando cambie la página actual
+  }, [fetchUsuarios]); // Ahora fetchUsuarios es una dependencia válida
 
   const handleChangePassword = (id) => {
     const nuevaContrasena = prompt("Ingresa la nueva contraseña:");
@@ -126,13 +129,57 @@ const GestionUsuarios = () => {
         if (!response.ok) {
           throw new Error("Error al eliminar el usuario");
         }
-        setUsuarios(usuarios.filter((usuario) => usuario.id !== id));
+        return response.text(); // Procesar la respuesta del backend
+      })
+      .then(() => {
+        fetchUsuarios(); // Actualizar la lista de usuarios desde el backend
         alert("Usuario eliminado exitosamente.");
       })
       .catch((error) => {
         console.error("Error al eliminar el usuario:", error);
         alert("No se pudo eliminar el usuario. Inténtalo de nuevo.");
       });
+  };
+
+  const handleAddUser = async () => {
+    // Validar que todos los campos estén completos
+    if (!newUser.nombre || !newUser.correo || !newUser.contrasena || !newUser.idRol) {
+      alert("Por favor, completa todos los campos antes de guardar.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch("http://localhost:5074/api/Usuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al agregar el usuario");
+      }
+
+      // Verificar si la respuesta es JSON
+      const contentType = response.headers.get("Content-Type");
+      if (contentType && contentType.includes("application/json")) {
+        await response.json(); // Procesar la respuesta si es JSON
+      } else {
+        alert(await response.text()); // Mostrar el mensaje si no es JSON
+      }
+
+      // Actualizar la lista de usuarios desde el backend
+      await fetchUsuarios(); // Llama a la función para obtener los usuarios actualizados
+      setShowModal(false); // Cierra el modal
+      alert("Usuario agregado exitosamente.");
+    } catch (error) {
+      console.error("Error al agregar el usuario:", error);
+      alert("No se pudo agregar el usuario. Inténtalo de nuevo.");
+    }
   };
 
   const handlePreviousPage = () => {
@@ -157,13 +204,19 @@ const GestionUsuarios = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      {/* Botón para regresar al dashboard */}
-      <div className="mb-4">
+      {/* Botón para regresar al dashboard y agregar usuario */}
+      <div className="mb-4 flex justify-between">
         <button
           onClick={() => navigate("/dashboard")}
           className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
         >
           Volver al Dashboard
+        </button>
+        <button
+          onClick={() => setShowModal(true)} // Abre el modal
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+        >
+          Agregar Usuario
         </button>
       </div>
 
@@ -237,6 +290,62 @@ const GestionUsuarios = () => {
           Siguiente
         </button>
       </div>
+
+      {/* Modal para agregar usuario */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Agregar Usuario</h2>
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={newUser.nombre}
+              onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })}
+              className="w-full mb-2 p-2 border rounded"
+            />
+            <input
+              type="email"
+              placeholder="Correo"
+              value={newUser.correo}
+              onChange={(e) => setNewUser({ ...newUser, correo: e.target.value })}
+              className="w-full mb-2 p-2 border rounded"
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={newUser.contrasena || ""}
+              onChange={(e) => setNewUser({ ...newUser, contrasena: e.target.value })}
+              className="w-full mb-2 p-2 border rounded"
+            />
+            <select
+              value={newUser.idRol || 0}
+              onChange={(e) => setNewUser({ ...newUser, idRol: parseInt(e.target.value) })}
+              className="w-full mb-4 p-2 border rounded"
+            >
+              <option value={0} disabled>
+                Selecciona un rol
+              </option>
+              <option value={1}>Administrador</option>
+              <option value={2}>Vendedor</option>
+              {/* Agrega más roles según sea necesario */}
+            </select>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleAddUser}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
