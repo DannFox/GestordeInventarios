@@ -6,9 +6,9 @@ const Categoria = () => {
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1); // Página actual
-  const [totalPages, setTotalPages] = useState(1); // Total de páginas
-  const pageSize = 10; // Tamaño de página
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,15 +17,12 @@ const Categoria = () => {
     if (token) {
       try {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
-        console.log("Decoded Token:", decodedToken);
         setIsAdmin(
           decodedToken[
             "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
           ] === "Admin"
         );
-      } catch (error) {
-        console.error("Error al decodificar el token:", error);
-      }
+      } catch (error) {}
     }
 
     const fetchCategorias = async () => {
@@ -46,19 +43,23 @@ const Categoria = () => {
         }
 
         const data = await response.json();
-        setCategorias(data.items || data); // Si la API devuelve `items`, úsalo; de lo contrario, usa `data`.
-        setTotalPages(data.totalPages || 1); // Si la API devuelve `totalPages`, úsalo; de lo contrario, asume 1.
+        setCategorias(data.items || data);
+        setTotalPages(data.totalPages || 1);
         setLoading(false);
       } catch (error) {
-        console.error("Error al obtener las categorías:", error);
         setLoading(false);
       }
     };
 
     fetchCategorias();
-  }, [currentPage]); // Ejecutar el efecto cuando cambie la página actual
+  }, [currentPage]);
 
   const handleAddCategoria = () => {
+    if (!nuevaCategoria.trim()) {
+      alert("El nombre de la categoría no puede estar vacío.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     fetch("http://localhost:5074/api/Categoria", {
@@ -67,7 +68,7 @@ const Categoria = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ nombre: nuevaCategoria }),
+      body: JSON.stringify(nuevaCategoria),
     })
       .then((response) => {
         if (!response.ok) {
@@ -76,11 +77,11 @@ const Categoria = () => {
         return response.json();
       })
       .then((categoriaAgregada) => {
-        setCategorias([...categorias, categoriaAgregada]);
+        setCategorias([...categorias, { id_categoria: categoriaAgregada.id_categoria, nombre: nuevaCategoria }]);
         setNuevaCategoria("");
       })
       .catch((error) => {
-        console.error("Error al agregar la categoría:", error);
+        alert("No se pudo agregar la categoría. Inténtalo de nuevo.");
       });
   };
 
@@ -94,14 +95,15 @@ const Categoria = () => {
         Authorization: `Bearer ${token}`,
       },
     })
-      .then((response) => {
+      .then(async (response) => {
         if (!response.ok) {
-          throw new Error("Error al eliminar la categoría");
+          const errorText = await response.text();
+          throw new Error(`Error al eliminar la categoría: ${errorText}`);
         }
-        setCategorias(categorias.filter((categoria) => categoria.id !== id));
+        setCategorias(categorias.filter((categoria) => categoria.id_categoria !== id));
       })
       .catch((error) => {
-        console.error("Error al eliminar la categoría:", error);
+        alert(`No se pudo eliminar la categoría. Inténtalo de nuevo.`);
       });
   };
 
@@ -114,7 +116,7 @@ const Categoria = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ nombre: nuevoNombre }),
+      body: JSON.stringify(nuevoNombre),
     })
       .then((response) => {
         if (!response.ok) {
@@ -122,16 +124,16 @@ const Categoria = () => {
         }
         return response.json();
       })
-      .then((categoriaActualizada) => {
+      .then(() => {
         setCategorias(
           categorias.map((categoria) =>
-            categoria.id_categoria === id ? categoriaActualizada : categoria
+            categoria.id_categoria === id
+              ? { ...categoria, nombre: nuevoNombre }
+              : categoria
           )
         );
       })
-      .catch((error) => {
-        console.error("Error al actualizar la categoría:", error);
-      });
+      .catch(() => {});
   };
 
   const handlePreviousPage = () => {
@@ -196,7 +198,6 @@ const Categoria = () => {
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-blue-600 text-white">
-              <th className="px-4 py-2">ID</th>
               <th className="px-4 py-2">Nombre</th>
               {isAdmin && <th className="px-4 py-2">Acciones</th>}
             </tr>
@@ -204,17 +205,18 @@ const Categoria = () => {
           <tbody>
             {categorias.map((categoria) => (
               <tr key={categoria.id_categoria} className="border-b">
-                <td className="px-4 py-2 text-center">{categoria.id_categoria}</td>
                 <td className="px-4 py-2 text-center">{categoria.nombre}</td>
                 {isAdmin && (
                   <td className="px-4 py-2 text-center">
                     <button
-                      onClick={() =>
-                        handleUpdateCategoria(
-                          categoria.id_categoria,
-                          prompt("Nuevo nombre de la categoría:", categoria.nombre)
-                        )
-                      }
+                      onClick={() => {
+                        const nuevoNombre = prompt("Nuevo nombre de la categoría:", categoria.nombre);
+                        if (!nuevoNombre) {
+                          alert("El nombre de la categoría no puede estar vacío.");
+                          return;
+                        }
+                        handleUpdateCategoria(categoria.id_categoria, nuevoNombre);
+                      }}
                       className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
                     >
                       Editar
