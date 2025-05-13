@@ -82,5 +82,19 @@ namespace Inventario.API.API
                 return NotFound(new { Error = ex.Message });
             }
         }
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                await _usuarioService.DeleteAsync(id);
+                return Ok("Usuario eliminado exitosamente.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+        }
     }
 }

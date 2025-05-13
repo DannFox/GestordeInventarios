@@ -122,5 +122,15 @@ namespace Inventario.Application.Services
             _context.Usuarios.Update(usuario);
             await _context.SaveChangesAsync();
         }
+
+        public async Task DeleteAsync(int idUsuario)
+        {
+            var usuario = await _context.Usuarios.FindAsync(idUsuario);
+            if (usuario == null)
+                throw new KeyNotFoundException("Usuario no encontrado");
+
+            _context.Usuarios.Remove(usuario);
+            await _context.SaveChangesAsync();
+        }
     }
 }

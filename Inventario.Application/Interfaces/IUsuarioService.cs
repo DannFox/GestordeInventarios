@@ -16,5 +16,6 @@ namespace Inventario.Application.Interfaces
 
         Task RestablecerCorreoAsync(int idUsuario, UsuarioUpdateCorreoDTO dto);
         Task RestablecerContrasenaAsync(int idUsuario, UsuarioUpdateContrasenaDTO dto);
+        Task DeleteAsync(int idUsuario);
     }
 }
