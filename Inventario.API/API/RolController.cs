@@ -34,8 +34,8 @@ namespace Inventario.API.API
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] RolCreateDTO rol)
         {
-            await _rolService.CreateAsync(rol);
-            return Ok("Rol creado exitosamente.");
+            var nuevoRol = await _rolService.CreateAsync(rol);
+            return Ok(nuevoRol);
         }
 
         [HttpPut("{id}")]

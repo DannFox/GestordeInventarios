@@ -18,7 +18,7 @@ namespace Inventario.Application.Services
         {
             _context = context;
         }
-        public async Task CreateAsync(RolCreateDTO rol)
+        public async Task<RolResponseDTO> CreateAsync(RolCreateDTO rol)
         {
             var nuevoRol = new Roles
             {
@@ -27,6 +27,12 @@ namespace Inventario.Application.Services
 
             _context.Roles.Add(nuevoRol);
             await _context.SaveChangesAsync();
+
+            return new RolResponseDTO
+            {
+                IdRol = nuevoRol.id_rol,
+                Nombre = nuevoRol.nombre
+            };
 
         }
 

@@ -1,4 +1,5 @@
 ﻿using Inventario.API.DTOs;
+using Inventario.Application.DTOs;
 using Inventario.Domain.Entities;
 using Inventario.Domain.Interfaces;
 using Inventario.Infraestructure.Data;
@@ -94,6 +95,25 @@ namespace Inventario.Application.Services
 
             _context.Productos.Update(productoExistente);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<ProductoconCategoriaDTO>> GetByCategoriaIdAsync(int idCategoria)
+        {
+            var productos = await _context.Productos
+                .Include(p => p.categorias)
+                .Where(p => p.id_categoria == idCategoria)
+                .ToListAsync();
+
+            return productos.Select(p => new ProductoconCategoriaDTO
+            {
+                IdProducto = p.id_producto,
+                Nombre = p.nombre,
+                Descripcion = p.descripcion,
+                PrecioUnitario = p.precio_unitario,
+                Stock = p.stock,
+                IdCategoria = p.id_categoria,
+                NombreCategoria = p.categorias != null ? p.categorias.nombre : null
+            });
         }
     }
 }

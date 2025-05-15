@@ -18,5 +18,6 @@ namespace Inventario.Application.Interfaces
         Task RestablecerContrasenaAsync(int idUsuario, UsuarioUpdateContrasenaDTO dto);
         Task DeleteAsync(int idUsuario);
         Task<IEnumerable<UsuarioResponseDTO>> GetByRolAsync(int idRol);
+        Task CambiarRolAsync(int idUsuario, UsuarioUpdateRolDTO dto);
     }
 }

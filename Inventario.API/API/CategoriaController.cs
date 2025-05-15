@@ -1,4 +1,5 @@
-﻿using Inventario.Application.Services;
+﻿using Inventario.Application.DTOs;
+using Inventario.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -57,13 +58,13 @@ namespace Inventario.API.API
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([FromBody] string nombre)
+        public async Task<IActionResult> Create([FromBody] CategoriaCreateDTO dto)
         {
-            if (string.IsNullOrWhiteSpace(nombre))
+            if (string.IsNullOrWhiteSpace(dto.Nombre))
                 return BadRequest(new { Error = "El nombre de la categoria es obligatorio" });
 
-            await _categoriaService.CreateAsync(nombre);
-            return Ok(new { Message = "Categoria creada exitosamente" });
+            var nuevaCategoria = await _categoriaService.CreateAsync(dto.Nombre);
+            return Ok(nuevaCategoria);
         }
 
         [HttpPut("{id}")]

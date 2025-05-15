@@ -1,4 +1,5 @@
 ﻿using Inventario.API.DTOs;
+using Inventario.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,7 @@ namespace Inventario.Domain.Interfaces
         Task CreateAsync(ProductoCreateDTO producto);
         Task UpdateAsync(ProductoUpdateDTO producto);
         Task DeleteAsync(int id);
+        Task<IEnumerable<ProductoconCategoriaDTO>> GetByCategoriaIdAsync(int idCategoria);
+
     }
 }

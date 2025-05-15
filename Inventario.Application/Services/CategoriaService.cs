@@ -62,7 +62,7 @@ namespace Inventario.Application.Services
             };
         }
 
-        public async Task CreateAsync(string nombre)
+        public async Task<CategoriaResponseDTO> CreateAsync(string nombre)
         {
             var nuevaCategoria = new Categorias
             {
@@ -71,6 +71,12 @@ namespace Inventario.Application.Services
 
             _context.Categorias.Add(nuevaCategoria);
             await _context.SaveChangesAsync();
+
+            return new CategoriaResponseDTO
+            {
+                IdCategoria = nuevaCategoria.id_categoria,
+                Nombre = nuevaCategoria.nombre
+            };
         }
 
         public async Task UpdateAsync(int id, string nombre)

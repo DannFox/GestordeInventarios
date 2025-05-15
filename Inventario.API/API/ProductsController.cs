@@ -67,5 +67,12 @@ namespace Inventario.API.API
             await _productService.DeleteAsync(id);
             return NoContent();
         }
+
+        [HttpGet("PorCategoria/{idCategoria}")]
+        public async Task<IActionResult> GetByCategoriaId(int idCategoria)
+        {
+            var productos = await _productService.GetByCategoriaIdAsync(idCategoria);
+            return Ok(productos);
+        }
     }
 }

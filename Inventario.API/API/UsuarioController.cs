@@ -104,5 +104,20 @@ namespace Inventario.API.API
             var usuarios = await _usuarioService.GetByRolAsync(idRol);
             return Ok(usuarios);
         }
+
+        [HttpPut("{id}/CambiarRol")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CambiarRol(int id, [FromBody] UsuarioUpdateRolDTO dto)
+        {
+            try
+            {
+                await _usuarioService.CambiarRolAsync(id, dto);
+                return Ok("Rol actualizado correctamente.");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { Error = ex.Message });
+            }
+        }
     }
 }

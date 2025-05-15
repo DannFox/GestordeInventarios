@@ -147,5 +147,15 @@ namespace Inventario.Application.Services
                 Rol = u.roles.nombre,
             });
         }
+        public async Task CambiarRolAsync(int idUsuario, UsuarioUpdateRolDTO dto)
+        {
+            var usuario = await _context.Usuarios.FindAsync(idUsuario);
+            if (usuario == null)
+                throw new KeyNotFoundException("Usuario no encontrado");
+
+            usuario.id_rol = dto.IdRol;
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+        }
     }
 }

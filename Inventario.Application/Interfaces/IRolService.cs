@@ -11,7 +11,7 @@ namespace Inventario.Application.Interfaces
     {
         Task<IEnumerable<RolResponseDTO>> GetAllAsync();
         Task<RolResponseDTO> GetByIdAsync(int id);
-        Task CreateAsync(RolCreateDTO rol);
+        Task<RolResponseDTO> CreateAsync(RolCreateDTO rol);
         Task UpdateAsync(int id, RolUpdateDTO rol);
         Task DeleteAsync(int id);
     }
