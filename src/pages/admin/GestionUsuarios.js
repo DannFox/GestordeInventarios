@@ -4,14 +4,16 @@ import { useNavigate } from "react-router-dom";
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1); // Página actual
-  const [totalPages, setTotalPages] = useState(1); // Total de páginas
-  const [showModal, setShowModal] = useState(false); // Estado para mostrar/ocultar el modal
-  const [newUser, setNewUser] = useState({ nombre: "", correo: "", rol: "" }); // Estado para el nuevo usuario
-  const pageSize = 10; // Tamaño de página
-  const navigate = useNavigate(); // Hook para navegación
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showModal, setShowModal] = useState(false);
+  const [newUser, setNewUser] = useState({ nombre: "", correo: "", rol: "" });
+  const [showRoleModal, setShowRoleModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newRole, setNewRole] = useState("");
+  const pageSize = 10;
+  const navigate = useNavigate();
 
-  // Envolver fetchUsuarios en useCallback
   const fetchUsuarios = useCallback(async () => {
     const token = localStorage.getItem("token");
 
@@ -32,18 +34,17 @@ const GestionUsuarios = () => {
       }
 
       const data = await response.json();
-      setUsuarios(data.items || data); // Actualiza la lista de usuarios
-      setTotalPages(data.totalPages || 1); // Actualiza el total de páginas
+      setUsuarios(data.items || data);
+      setTotalPages(data.totalPages || 1);
       setLoading(false);
     } catch (error) {
-      console.error("Error al obtener los usuarios:", error);
       setLoading(false);
     }
-  }, [currentPage, pageSize]); // Dependencias del useCallback
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     fetchUsuarios();
-  }, [fetchUsuarios]); // Ahora fetchUsuarios es una dependencia válida
+  }, [fetchUsuarios]);
 
   const handleChangePassword = (id) => {
     const nuevaContrasena = prompt("Ingresa la nueva contraseña:");
@@ -57,7 +58,7 @@ const GestionUsuarios = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ nuevaContrasena }), // Cambiado a "nuevaContrasena"
+      body: JSON.stringify({ nuevaContrasena }),
     })
       .then((response) => {
         if (!response.ok) {
@@ -65,8 +66,7 @@ const GestionUsuarios = () => {
         }
         alert("Contraseña actualizada exitosamente.");
       })
-      .catch((error) => {
-        console.error("Error al cambiar la contraseña:", error);
+      .catch(() => {
         alert("No se pudo cambiar la contraseña. Inténtalo de nuevo.");
       });
   };
@@ -83,23 +83,20 @@ const GestionUsuarios = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ correo }), // Usando el parámetro "correo"
+      body: JSON.stringify({ correo }),
     })
       .then(async (response) => {
         if (!response.ok) {
           throw new Error("Error al cambiar el correo");
         }
 
-        // Intenta leer la respuesta como JSON
         try {
           return await response.json();
         } catch {
-          // Si la respuesta no es JSON, devuelve el correo enviado
           return { correo };
         }
       })
       .then((data) => {
-        // Actualiza el estado local con el nuevo correo
         setUsuarios(
           usuarios.map((usuario) =>
             usuario.idUsuario === id ? { ...usuario, correo: data.correo } : usuario
@@ -107,8 +104,7 @@ const GestionUsuarios = () => {
         );
         alert("Correo actualizado exitosamente.");
       })
-      .catch((error) => {
-        console.error("Error al cambiar el correo:", error);
+      .catch(() => {
         alert("No se pudo cambiar el correo. Inténtalo de nuevo.");
       });
   };
@@ -129,20 +125,18 @@ const GestionUsuarios = () => {
         if (!response.ok) {
           throw new Error("Error al eliminar el usuario");
         }
-        return response.text(); // Procesar la respuesta del backend
+        return response.text();
       })
       .then(() => {
-        fetchUsuarios(); // Actualizar la lista de usuarios desde el backend
+        fetchUsuarios();
         alert("Usuario eliminado exitosamente.");
       })
-      .catch((error) => {
-        console.error("Error al eliminar el usuario:", error);
+      .catch(() => {
         alert("No se pudo eliminar el usuario. Inténtalo de nuevo.");
       });
   };
 
   const handleAddUser = async () => {
-    // Validar que todos los campos estén completos
     if (!newUser.nombre || !newUser.correo || !newUser.contrasena || !newUser.idRol) {
       alert("Por favor, completa todos los campos antes de guardar.");
       return;
@@ -164,21 +158,48 @@ const GestionUsuarios = () => {
         throw new Error("Error al agregar el usuario");
       }
 
-      // Verificar si la respuesta es JSON
       const contentType = response.headers.get("Content-Type");
       if (contentType && contentType.includes("application/json")) {
-        await response.json(); // Procesar la respuesta si es JSON
+        await response.json();
       } else {
-        alert(await response.text()); // Mostrar el mensaje si no es JSON
+        alert(await response.text());
       }
 
-      // Actualizar la lista de usuarios desde el backend
-      await fetchUsuarios(); // Llama a la función para obtener los usuarios actualizados
-      setShowModal(false); // Cierra el modal
+      await fetchUsuarios();
+      setShowModal(false);
       alert("Usuario agregado exitosamente.");
-    } catch (error) {
-      console.error("Error al agregar el usuario:", error);
+    } catch {
       alert("No se pudo agregar el usuario. Inténtalo de nuevo.");
+    }
+  };
+
+  const handleChangeRole = async () => {
+    if (!newRole) {
+      alert("Por favor, selecciona un rol.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`http://localhost:5074/api/Usuario/${selectedUser.idUsuario}/CambiarRol`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ idRol: parseInt(newRole) }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al cambiar el rol del usuario");
+      }
+
+      alert("Rol actualizado exitosamente.");
+      setShowRoleModal(false);
+      fetchUsuarios();
+    } catch {
+      alert("No se pudo cambiar el rol. Inténtalo de nuevo.");
     }
   };
 
@@ -204,7 +225,6 @@ const GestionUsuarios = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      {/* Botón para regresar al dashboard y agregar usuario */}
       <div className="mb-4 flex justify-between">
         <button
           onClick={() => navigate("/dashboard")}
@@ -213,7 +233,7 @@ const GestionUsuarios = () => {
           Volver al Dashboard
         </button>
         <button
-          onClick={() => setShowModal(true)} // Abre el modal
+          onClick={() => setShowModal(true)}
           className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
         >
           Agregar Usuario
@@ -255,9 +275,18 @@ const GestionUsuarios = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteUsuario(usuario.idUsuario)}
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 mr-2"
                     >
                       Eliminar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedUser(usuario);
+                        setShowRoleModal(true);
+                      }}
+                      className="bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
+                    >
+                      Cambiar Rol
                     </button>
                   </td>
                 </tr>
@@ -291,7 +320,6 @@ const GestionUsuarios = () => {
         </button>
       </div>
 
-      {/* Modal para agregar usuario */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -327,7 +355,6 @@ const GestionUsuarios = () => {
               </option>
               <option value={1}>Administrador</option>
               <option value={2}>Vendedor</option>
-              {/* Agrega más roles según sea necesario */}
             </select>
             <div className="flex justify-end">
               <button
@@ -338,6 +365,40 @@ const GestionUsuarios = () => {
               </button>
               <button
                 onClick={handleAddUser}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRoleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Cambiar Rol de Usuario</h2>
+            <p className="mb-4">Usuario: {selectedUser?.nombre}</p>
+            <select
+              value={newRole}
+              onChange={(e) => setNewRole(e.target.value)}
+              className="w-full mb-4 p-2 border rounded"
+            >
+              <option value="" disabled>
+                Selecciona un rol
+              </option>
+              <option value={1}>Administrador</option>
+              <option value={2}>Vendedor</option>
+            </select>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowRoleModal(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleChangeRole}
                 className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
               >
                 Guardar

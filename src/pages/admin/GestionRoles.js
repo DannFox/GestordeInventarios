@@ -11,32 +11,33 @@ const GestionRoles = () => {
   const [showRoleDetails, setShowRoleDetails] = useState(false); // Mostrar/ocultar modal de detalles
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-      const token = localStorage.getItem("token");
+  // Función para obtener la lista de roles
+  const fetchRoles = async () => {
+    const token = localStorage.getItem("token");
 
-      try {
-        const response = await fetch("http://localhost:5074/api/Rol", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    try {
+      const response = await fetch("http://localhost:5074/api/Rol", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        if (!response.ok) {
-          throw new Error("Error al obtener los roles");
-        }
-
-        const data = await response.json();
-        setRoles(data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error al obtener los roles:", error);
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Error al obtener los roles");
       }
-    };
 
+      const data = await response.json();
+      setRoles(data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error al obtener los roles:", error);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRoles();
   }, []);
 
@@ -77,19 +78,23 @@ const GestionRoles = () => {
       const response = await fetch("http://localhost:5074/api/Rol", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json", // Asegúrate de usar application/json
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newRole),
+        body: JSON.stringify({ nombre: newRole.nombre }), // Enviar como JSON con el campo "nombre"
       });
 
       if (!response.ok) {
         throw new Error("Error al agregar el rol");
       }
 
-      const addedRole = await response.json();
-      setRoles([...roles, addedRole]);
+      const addedRole = await response.json(); // Parsear la respuesta como JSON
+      setRoles((prevRoles) => [...prevRoles, addedRole]); // Actualizar la tabla con el nuevo rol
+
       setShowModal(false);
+      setNewRole({ nombre: "" }); // Limpiar el formulario
+
+      // Mostrar mensaje de éxito
       alert("Rol agregado exitosamente.");
     } catch (error) {
       console.error("Error al agregar el rol:", error);
@@ -115,7 +120,8 @@ const GestionRoles = () => {
         throw new Error("Error al eliminar el rol");
       }
 
-      setRoles(roles.filter((role) => role.id !== id));
+      // Actualizar la lista de roles eliminando el rol correspondiente
+      setRoles((prevRoles) => prevRoles.filter((role) => role.idRol !== id));
       alert("Rol eliminado exitosamente.");
     } catch (error) {
       console.error("Error al eliminar el rol:", error);

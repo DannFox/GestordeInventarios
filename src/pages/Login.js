@@ -5,6 +5,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Estado para la pantalla de carga
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,6 +23,8 @@ const Login = () => {
       return;
     }
 
+    setLoading(true); // Mostrar pantalla de carga
+
     try {
       const res = await fetch("http://localhost:5074/api/Auth/login", {
         method: "POST",
@@ -32,6 +35,7 @@ const Login = () => {
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Credenciales invalidas.");
+        setLoading(false); // Ocultar pantalla de carga
         return;
       }
 
@@ -41,8 +45,21 @@ const Login = () => {
     } catch (err) {
       setError("Error del servidor.");
       console.error(err);
+      setLoading(false); // Ocultar pantalla de carga
     }
   };
+
+  if (loading) {
+    // Pantalla de carga
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300">
+        <div className="text-center">
+          <div className="loader mb-4"></div>
+          <p className="text-blue-600 text-lg font-semibold">Iniciando sesión...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-108px)] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-4">

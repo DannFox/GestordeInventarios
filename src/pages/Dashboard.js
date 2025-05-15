@@ -11,17 +11,17 @@ const Dashboard = () => {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const adminMenuRef = useRef(null);
 
+  // Mensaje del día
+  const [mensajeDelDia, setMensajeDelDia] = useState("");
+
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        console.log("Decoded Token:", decodedToken);
         setIsAdmin(decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] === "Admin");
-      } catch (error) {
-        console.error("Error al decodificar el token:", error);
-      }
+      } catch (error) {}
     }
 
     // Obtener productos y categorías
@@ -63,12 +63,22 @@ const Dashboard = () => {
         setProductos(productosConNombreCategoria);
         setLoading(false);
       } catch (error) {
-        console.error("Error al obtener productos y categorías:", error);
         setLoading(false);
       }
     };
 
     fetchProductosYCategorias();
+
+    // Generar mensaje del día
+    const mensajes = [
+      "¡Hoy es un gran día para organizar tu inventario!",
+      "Recuerda revisar los productos con bajo stock.",
+      "¡Mantén tus categorías actualizadas para un mejor control!",
+      "Un inventario organizado es clave para el éxito.",
+      "¡Sigue trabajando duro, estás haciendo un gran trabajo!",
+    ];
+    const mensajeAleatorio = mensajes[Math.floor(Math.random() * mensajes.length)];
+    setMensajeDelDia(mensajeAleatorio);
   }, []);
 
   useEffect(() => {
@@ -196,6 +206,11 @@ const Dashboard = () => {
       {/* Contenido principal */}
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4 text-center">Resumen del Inventario</h1>
+
+        {/* Mensaje del día */}
+        <div className="bg-blue-100 text-blue-800 p-4 rounded-lg shadow-md mb-6 text-center">
+          <p className="text-lg font-semibold">{mensajeDelDia}</p>
+        </div>
 
         {/* Tarjetas de estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

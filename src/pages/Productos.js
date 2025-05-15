@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const Productos = () => {
   const [productos, setProductos] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1); // Página actual
   const [totalPages, setTotalPages] = useState(1); // Total de páginas
@@ -134,6 +135,10 @@ const Productos = () => {
     }
   };
 
+  const filteredProductos = productos.filter((producto) =>
+    producto.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -147,6 +152,15 @@ const Productos = () => {
       <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
         Lista de Productos
       </h1>
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Buscar producto..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
+        />
+      </div>
       <div className="flex justify-between mb-4">
         <button
           onClick={handleGoToDashboard}
@@ -154,14 +168,12 @@ const Productos = () => {
         >
           Ir al Dashboard
         </button>
-        {isAdmin && (
-          <button
-            onClick={handleAddProduct}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300"
-          >
-            Agregar Producto
-          </button>
-        )}
+        <button
+          onClick={handleAddProduct}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300"
+        >
+          Agregar Producto
+        </button>
       </div>
       <div className="overflow-x-auto">
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
@@ -176,7 +188,7 @@ const Productos = () => {
             </tr>
           </thead>
           <tbody>
-            {productos.map((producto) => (
+            {filteredProductos.map((producto) => (
               <tr key={producto.idProducto} className="border-b">
                 <td className="px-4 py-2 text-center">{producto.nombre}</td>
                 <td className="px-4 py-2 text-center">{producto.descripcion}</td>

@@ -8,6 +8,9 @@ const Categoria = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedCategoria, setSelectedCategoria] = useState(null); // Categoría seleccionada
+  const [categoriaProductos, setCategoriaProductos] = useState([]); // Productos de la categoría seleccionada
+  const [showCategoriaDetails, setShowCategoriaDetails] = useState(false); // Mostrar/ocultar modal de detalles
   const pageSize = 10;
   const navigate = useNavigate();
 
@@ -54,6 +57,31 @@ const Categoria = () => {
     fetchCategorias();
   }, [currentPage]);
 
+  const fetchCategoriaProductos = async (idCategoria) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(`http://localhost:5074/api/Products/PorCategoria/${idCategoria}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener los productos de la categoría");
+      }
+
+      const data = await response.json();
+      setCategoriaProductos(data);
+      setShowCategoriaDetails(true);
+    } catch (error) {
+      console.error("Error al obtener los productos de la categoría:", error);
+      alert("No se pudo obtener los productos de la categoría. Inténtalo de nuevo.");
+    }
+  };
+
   const handleAddCategoria = () => {
     if (!nuevaCategoria.trim()) {
       alert("El nombre de la categoría no puede estar vacío.");
@@ -68,24 +96,38 @@ const Categoria = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(nuevaCategoria),
+      body: JSON.stringify({ nombre: nuevaCategoria }),
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Error al agregar la categoría");
+          return response.text().then((text) => {
+            throw new Error(`Error al agregar la categoría: ${text}`);
+          });
         }
         return response.json();
       })
       .then((categoriaAgregada) => {
-        setCategorias([...categorias, { id_categoria: categoriaAgregada.id_categoria, nombre: nuevaCategoria }]);
-        setNuevaCategoria("");
+        setCategorias((prevCategorias) => [
+          ...prevCategorias,
+          { idCategoria: categoriaAgregada.idCategoria, nombre: categoriaAgregada.nombre },
+        ]);
+        setNuevaCategoria(""); // Limpiar el campo de entrada
+        alert("Categoría agregada exitosamente.");
       })
-      .catch((error) => {
+      .catch(() => {
         alert("No se pudo agregar la categoría. Inténtalo de nuevo.");
       });
   };
 
   const handleDeleteCategoria = (id) => {
+    const confirmDelete = window.confirm(
+      "¿Estás seguro de que deseas eliminar esta categoría? Esta acción no se puede deshacer."
+    );
+
+    if (!confirmDelete) {
+      return; // Si el usuario cancela, no se realiza la eliminación
+    }
+
     const token = localStorage.getItem("token");
 
     fetch(`http://localhost:5074/api/Categoria/${id}`, {
@@ -100,10 +142,15 @@ const Categoria = () => {
           const errorText = await response.text();
           throw new Error(`Error al eliminar la categoría: ${errorText}`);
         }
-        setCategorias(categorias.filter((categoria) => categoria.id_categoria !== id));
+
+        setCategorias((prevCategorias) =>
+          prevCategorias.filter((categoria) => categoria.idCategoria !== id)
+        );
+
+        alert("Categoría eliminada exitosamente.");
       })
-      .catch((error) => {
-        alert(`No se pudo eliminar la categoría. Inténtalo de nuevo.`);
+      .catch(() => {
+        alert("No se pudo eliminar la categoría. Inténtalo de nuevo.");
       });
   };
 
@@ -127,13 +174,15 @@ const Categoria = () => {
       .then(() => {
         setCategorias(
           categorias.map((categoria) =>
-            categoria.id_categoria === id
+            categoria.idCategoria === id
               ? { ...categoria, nombre: nuevoNombre }
               : categoria
           )
         );
       })
-      .catch(() => {});
+      .catch(() => {
+        alert("No se pudo actualizar la categoría. Inténtalo de nuevo.");
+      });
   };
 
   const handlePreviousPage = () => {
@@ -199,36 +248,47 @@ const Categoria = () => {
           <thead>
             <tr className="bg-blue-600 text-white">
               <th className="px-4 py-2">Nombre</th>
-              {isAdmin && <th className="px-4 py-2">Acciones</th>}
+              <th className="px-4 py-2">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {categorias.map((categoria) => (
-              <tr key={categoria.id_categoria} className="border-b">
+              <tr key={categoria.idCategoria} className="border-b">
                 <td className="px-4 py-2 text-center">{categoria.nombre}</td>
-                {isAdmin && (
-                  <td className="px-4 py-2 text-center">
-                    <button
-                      onClick={() => {
-                        const nuevoNombre = prompt("Nuevo nombre de la categoría:", categoria.nombre);
-                        if (!nuevoNombre) {
-                          alert("El nombre de la categoría no puede estar vacío.");
-                          return;
-                        }
-                        handleUpdateCategoria(categoria.id_categoria, nuevoNombre);
-                      }}
-                      className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategoria(categoria.id_categoria)}
-                      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                )}
+                <td className="px-4 py-2 text-center">
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => {
+                          const nuevoNombre = prompt("Nuevo nombre de la categoría:", categoria.nombre);
+                          if (!nuevoNombre) {
+                            alert("El nombre de la categoría no puede estar vacío.");
+                            return;
+                          }
+                          handleUpdateCategoria(categoria.idCategoria, nuevoNombre);
+                        }}
+                        className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCategoria(categoria.idCategoria)}
+                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mr-2"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => {
+                      setSelectedCategoria(categoria);
+                      fetchCategoriaProductos(categoria.idCategoria);
+                    }}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Ver Productos
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -258,6 +318,35 @@ const Categoria = () => {
           Siguiente
         </button>
       </div>
+
+      {showCategoriaDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">
+              Productos de la Categoría: {selectedCategoria?.nombre}
+            </h2>
+            <ul className="mb-4">
+              {categoriaProductos.length > 0 ? (
+                categoriaProductos.map((producto) => (
+                  <li key={producto.id} className="border-b py-2">
+                    {producto.nombre} - {producto.descripcion}
+                  </li>
+                ))
+              ) : (
+                <p>No hay productos asignados a esta categoría.</p>
+              )}
+            </ul>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowCategoriaDetails(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
