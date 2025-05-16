@@ -44,14 +44,14 @@ namespace Inventario.API.API
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] ProductoCreateDTO producto)
+        public async Task<IActionResult> Create([FromForm] ProductoCreateDTO producto)
         {
             await _productService.CreateAsync(producto);
             return CreatedAtAction(nameof(GetById), new { id = producto.IdCategoria }, producto);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] ProductoUpdateDTO producto)
+        public async Task<IActionResult> Update(int id, [FromForm] ProductoUpdateDTO producto)
         {
             if (id != producto.IdProducto)
             {

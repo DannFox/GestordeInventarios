@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +14,6 @@ namespace Inventario.Application.DTOs
         public string Descripcion { get; set; }
         public float PrecioUnitario { get; set; }
         public int Stock { get; set; }
+        public IFormFile? UrlImagen { get; set; }
     }
 }

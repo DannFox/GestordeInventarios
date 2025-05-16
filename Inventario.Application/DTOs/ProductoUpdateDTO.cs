@@ -1,4 +1,6 @@
-﻿namespace Inventario.API.DTOs
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Inventario.API.DTOs
 {
     public class ProductoUpdateDTO
     {
@@ -8,5 +10,6 @@
         public float PrecioUnitario { get; set; }
         public int Stock { get; set; }
         public int IdCategoria { get; set; }
+        public IFormFile UrlImagen { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace Inventario.Domain.Entities
         public int stock { get; set; }
         public DateTime fecha_creacion { get; set; } = DateTime.Now;
         public int id_categoria { get; set; }
+        public string? UrlImagen { get; set; }
 
         public Categorias categorias { get; set; }
     }

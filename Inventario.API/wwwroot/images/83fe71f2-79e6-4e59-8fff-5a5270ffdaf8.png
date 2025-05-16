@@ -1,0 +1,14 @@
+digraph G {
+	Pacientes [label="{Pacientes | id_paciente (PK) | nombre | apellido | email (UNIQUE) | telefono | direccion | historial_medico_id (FK)}" shape=record]
+	Doctores [label="{Doctores | id_doctor (PK) | nombre | apellido | especialidad | telefono | email (UNIQUE) | disponibilidad}" shape=record]
+	Sucursales [label="{Sucursales | id_sucursal (PK) | nombre | direccion | horario_atencion}" shape=record]
+	Doctor_Sucursal [label="{Doctor_Sucursal | id_doctor (PK, FK) | id_sucursal (PK, FK)}" shape=record]
+	Citas [label="{Citas | id_cita (PK) | fecha | hora | estado (DEFAULT 'Programada') | id_paciente (FK) | id_doctor (FK) | id_sucursal (FK)}" shape=record]
+	HistorialMedico [label="{HistorialMedico | id_historial (PK) | id_paciente (FK, UNIQUE) | notas | tratamientos}" shape=record]
+	Pacientes -> Citas [label="1:N"]
+	Doctores -> Citas [label="1:N"]
+	Sucursales -> Citas [label="1:N"]
+	Pacientes -> HistorialMedico [label="1:1"]
+	Doctores -> Doctor_Sucursal [label="1:N"]
+	Sucursales -> Doctor_Sucursal [label="1:N"]
+}

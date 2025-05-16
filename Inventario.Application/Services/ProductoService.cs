@@ -3,6 +3,7 @@ using Inventario.Application.DTOs;
 using Inventario.Domain.Entities;
 using Inventario.Domain.Interfaces;
 using Inventario.Infraestructure.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,8 @@ namespace Inventario.Application.Services
         }
         public async Task CreateAsync(ProductoCreateDTO producto)
         {
-            var nuevoProducto = new Productos
+            var imagenPath = "";
+            var nuevoProducto = new Productos()
             {
                 nombre = producto.Nombre,
                 descripcion = producto.Descripcion,
@@ -30,9 +32,33 @@ namespace Inventario.Application.Services
                 id_categoria = producto.IdCategoria,
                 fecha_creacion = DateTime.Now
             };
-
+            if (producto.UrlImagen != null)
+            {
+                var imagen = await SaveFile(producto.UrlImagen);
+                nuevoProducto.UrlImagen = imagen;
+            }
             _context.Productos.Add(nuevoProducto);
             await _context.SaveChangesAsync();
+        }
+
+        private async Task<string> SaveFile(IFormFile form)
+        {
+            var fileName = Guid.NewGuid().ToString();
+
+            string path = Path.Combine("wwwroot/images", fileName + Path.GetExtension(form.FileName));
+            var directory = Path.GetDirectoryName(path);
+
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            using(var stream = new FileStream(path, FileMode.Create))
+            {
+                form.CopyTo(stream);
+            }
+
+            return path;
         }
 
         public async Task DeleteAsync(int id)
