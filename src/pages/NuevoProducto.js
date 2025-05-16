@@ -20,6 +20,7 @@ const NuevoProducto = () => {
   });
   const [categorias, setCategorias] = useState([]);
   const [error, setError] = useState(null);
+  const [urlImagen, setUrlImagen] = useState(null); // Nuevo estado para la imagen
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,18 +47,32 @@ const NuevoProducto = () => {
     setProducto({ ...producto, [name]: value });
   };
 
+  // Nuevo handler para la imagen
+  const handleImageChange = (e) => {
+    setUrlImagen(e.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
     try {
+      const formData = new FormData();
+      formData.append("nombre", producto.nombre);
+      formData.append("descripcion", producto.descripcion);
+      formData.append("idCategoria", producto.idCategoria);
+      formData.append("stock", producto.stock);
+      formData.append("precioUnitario", producto.precioUnitario);
+      if (urlImagen) {
+        formData.append("UrlImagen", urlImagen); // Nombre del campo según tu requerimiento
+      }
+
       const responseProducto = await fetch("http://localhost:5074/api/Products", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(producto),
+        body: formData,
       });
 
       if (!responseProducto.ok) {
@@ -90,7 +105,7 @@ const NuevoProducto = () => {
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" encType="multipart/form-data">
           <div>
             <label className="block text-gray-700 font-semibold mb-1 flex items-center gap-1">
               <TagIcon className="h-5 w-5 text-green-500" />
@@ -170,6 +185,18 @@ const NuevoProducto = () => {
               min={0}
               step="0.01"
               required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1 flex items-center gap-1">
+              Imagen
+            </label>
+            <input
+              type="file"
+              name="UrlImagen"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
             />
           </div>
           <div className="flex justify-between mt-6">
