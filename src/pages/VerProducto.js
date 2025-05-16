@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  ArrowLeftCircleIcon,
+  CubeIcon,
+  TagIcon,
+  ClipboardDocumentListIcon,
+  ArchiveBoxIcon,
+  CurrencyDollarIcon,
+} from "@heroicons/react/24/outline";
 
 const VerProducto = () => {
-  const { idProducto } = useParams(); // Obtener el ID del producto desde la URL
+  const { idProducto } = useParams();
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -57,7 +65,7 @@ const VerProducto = () => {
   }, [idProducto]);
 
   const handleBack = () => {
-    navigate("/productos"); // Redirige a la lista de productos
+    navigate("/productos");
   };
 
   if (loading) {
@@ -69,39 +77,65 @@ const VerProducto = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
-        Detalles del Producto
-      </h1>
-      <div className="max-w-lg mx-auto bg-white p-6 rounded-lg shadow-md">
-        <p className="mb-4">
-          <strong>Nombre:</strong> {producto.nombre}
-        </p>
-        <p className="mb-4">
-          <strong>Descripción:</strong> {producto.descripcion}
-        </p>
-        <p className="mb-4">
-          <strong>Categoría:</strong> {producto.nombreCategoria || "Sin categoría"}
-        </p>
-        <p className="mb-4">
-          <strong>Stock:</strong> {producto.stock}
-        </p>
-        <p className="mb-4">
-          <strong>Precio Unitario:</strong>{" "}
-          {producto.precioUnitario.toLocaleString("es-EC", {
-            style: "currency",
-            currency: "USD",
-          })}
-        </p>
-        <div className="flex justify-end">
-          <button
-            onClick={handleBack}
-            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-          >
-            Volver
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-green-100 to-green-300 p-4 flex flex-col items-center">
+      <div className="w-full max-w-lg">
+        <button
+          onClick={handleBack}
+          className="flex items-center gap-2 mb-6 text-green-700 hover:text-green-900 transition-all duration-200"
+        >
+          <ArrowLeftCircleIcon className="h-6 w-6" />
+          Volver a Productos
+        </button>
+        <div className="bg-white p-8 rounded-2xl shadow-2xl animate-fade-in">
+          <h1 className="text-2xl font-bold text-center text-green-600 mb-8 flex items-center gap-2 justify-center">
+            <CubeIcon className="h-7 w-7" />
+            Detalles del Producto
+          </h1>
+          <div className="space-y-5">
+            <div className="flex items-center gap-2 text-lg">
+              <TagIcon className="h-5 w-5 text-green-500" />
+              <span className="font-semibold">Nombre:</span>
+              <span>{producto.nombre}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <ClipboardDocumentListIcon className="h-5 w-5 text-green-500" />
+              <span className="font-semibold">Descripción:</span>
+              <span>{producto.descripcion}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <ClipboardDocumentListIcon className="h-5 w-5 text-green-500" />
+              <span className="font-semibold">Categoría:</span>
+              <span>{producto.nombreCategoria || "Sin categoría"}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <ArchiveBoxIcon className="h-5 w-5 text-green-500" />
+              <span className="font-semibold">Stock:</span>
+              <span>{producto.stock}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+              <CurrencyDollarIcon className="h-5 w-5 text-green-500" />
+              <span className="font-semibold">Precio Unitario:</span>
+              <span>
+                {producto.precioUnitario.toLocaleString("es-EC", {
+                  style: "currency",
+                  currency: "USD",
+                })}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+      <style>
+        {`
+          .animate-fade-in {
+            animation: fadeIn 0.7s;
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+          }
+        `}
+      </style>
     </div>
   );
 };

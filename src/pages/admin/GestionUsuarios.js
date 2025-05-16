@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  UserGroupIcon,
+  PlusCircleIcon,
+  TrashIcon,
+  ArrowLeftCircleIcon,
+  PencilSquareIcon,
+  EnvelopeIcon,
+  KeyIcon,
+  DocumentArrowDownIcon,
+} from "@heroicons/react/24/outline";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -7,7 +21,7 @@ const GestionUsuarios = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [newUser, setNewUser] = useState({ nombre: "", correo: "", rol: "" });
+  const [newUser, setNewUser] = useState({ nombre: "", correo: "", contrasena: "", idRol: 0 });
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [newRole, setNewRole] = useState("");
@@ -45,6 +59,36 @@ const GestionUsuarios = () => {
   useEffect(() => {
     fetchUsuarios();
   }, [fetchUsuarios]);
+
+  // Exportar usuarios a Excel
+  const exportarExcel = () => {
+    const datos = usuarios.map((u) => ({
+      Nombre: u.nombre,
+      Correo: u.correo,
+      Rol: u.rol,
+    }));
+    const ws = XLSX.utils.json_to_sheet(datos);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Usuarios");
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "usuarios.xlsx");
+  };
+
+  // Exportar usuarios a PDF
+  const exportarPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Listado de Usuarios", 14, 16);
+    const tableColumn = ["Nombre", "Correo", "Rol"];
+    const tableRows = usuarios.map((u) => [u.nombre, u.correo, u.rol]);
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 22,
+      styles: { fontSize: 10 },
+    });
+    doc.save("usuarios.pdf");
+  };
 
   const handleChangePassword = (id) => {
     const nuevaContrasena = prompt("Ingresa la nueva contraseña:");
@@ -182,14 +226,17 @@ const GestionUsuarios = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch(`http://localhost:5074/api/Usuario/${selectedUser.idUsuario}/CambiarRol`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ idRol: parseInt(newRole) }),
-      });
+      const response = await fetch(
+        `http://localhost:5074/api/Usuario/${selectedUser.idUsuario}/CambiarRol`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ idRol: parseInt(newRole) }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Error al cambiar el rol del usuario");
@@ -225,58 +272,91 @@ const GestionUsuarios = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <div className="mb-4 flex justify-between">
+      <div className="mb-4 flex flex-col md:flex-row justify-between gap-2">
         <button
           onClick={() => navigate("/dashboard")}
-          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
         >
+          <ArrowLeftCircleIcon className="h-5 w-5" />
           Volver al Dashboard
         </button>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
-          Agregar Usuario
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={exportarExcel}
+            className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+          >
+            <DocumentArrowDownIcon className="h-5 w-5" />
+            Exportar Excel
+          </button>
+          <button
+            onClick={exportarPDF}
+            className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+          >
+            <DocumentArrowDownIcon className="h-5 w-5" />
+            Exportar PDF
+          </button>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+          >
+            <PlusCircleIcon className="h-5 w-5" />
+            Agregar Usuario
+          </button>
+        </div>
       </div>
 
-      <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
+      <h1 className="text-2xl font-bold text-center text-green-600 mb-6 flex items-center gap-2 justify-center">
+        <UserGroupIcon className="h-7 w-7" />
         Gestión de Usuarios
       </h1>
       <div className="overflow-x-auto">
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-green-600 text-white">
-              <th className="px-4 py-2">Nombre</th>
-              <th className="px-4 py-2">Correo</th>
-              <th className="px-4 py-2">Rol</th>
-              <th className="px-4 py-2">Acciones</th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <UserGroupIcon className="h-5 w-5" /> Nombre
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <EnvelopeIcon className="h-5 w-5" /> Correo
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">Rol</th>
+              <th className="px-4 py-2 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {usuarios.map((usuario) => {
               return (
-                <tr key={usuario.idUsuario} className="border-b">
+                <tr key={usuario.idUsuario} className="border-b hover:bg-green-50 transition-colors duration-200">
                   <td className="px-4 py-2 text-center">{usuario.nombre}</td>
                   <td className="px-4 py-2 text-center">{usuario.correo}</td>
                   <td className="px-4 py-2 text-center">{usuario.rol}</td>
-                  <td className="px-4 py-2 text-center">
+                  <td className="px-4 py-2 text-center flex flex-wrap gap-2 justify-center">
                     <button
                       onClick={() => handleChangePassword(usuario.idUsuario)}
-                      className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2"
+                      className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                      title="Cambiar Contraseña"
                     >
-                      Cambiar Contraseña
+                      <KeyIcon className="h-5 w-5" />
+                      Contraseña
                     </button>
                     <button
                       onClick={() => handleChangeEmail(usuario.idUsuario)}
-                      className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
+                      className="flex items-center gap-1 bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                      title="Cambiar Correo"
                     >
-                      Cambiar Correo
+                      <EnvelopeIcon className="h-5 w-5" />
+                      Correo
                     </button>
                     <button
                       onClick={() => handleDeleteUsuario(usuario.idUsuario)}
-                      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 mr-2"
+                      className="flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                      title="Eliminar"
                     >
+                      <TrashIcon className="h-5 w-5" />
                       Eliminar
                     </button>
                     <button
@@ -284,9 +364,11 @@ const GestionUsuarios = () => {
                         setSelectedUser(usuario);
                         setShowRoleModal(true);
                       }}
-                      className="bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
+                      className="flex items-center gap-1 bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                      title="Cambiar Rol"
                     >
-                      Cambiar Rol
+                      <PencilSquareIcon className="h-5 w-5" />
+                      Rol
                     </button>
                   </td>
                 </tr>
@@ -300,8 +382,10 @@ const GestionUsuarios = () => {
         <button
           onClick={handlePreviousPage}
           disabled={currentPage === 1}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === 1 ? "bg-gray-400" : "bg-green-600 text-white hover:bg-green-700"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            currentPage === 1
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 text-white hover:bg-green-700 hover:scale-105 active:scale-95"
           }`}
         >
           Anterior
@@ -312,18 +396,24 @@ const GestionUsuarios = () => {
         <button
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === totalPages ? "bg-gray-400" : "bg-green-600 text-white hover:bg-green-700"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            currentPage === totalPages
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 text-white hover:bg-green-700 hover:scale-105 active:scale-95"
           }`}
         >
           Siguiente
         </button>
       </div>
 
+      {/* Modal para agregar usuario */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Agregar Usuario</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fade-in">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <PlusCircleIcon className="h-6 w-6 text-blue-600" />
+              Agregar Usuario
+            </h2>
             <input
               type="text"
               placeholder="Nombre"
@@ -356,16 +446,16 @@ const GestionUsuarios = () => {
               <option value={1}>Administrador</option>
               <option value={2}>Vendedor</option>
             </select>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowModal(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-all duration-200"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAddUser}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
               >
                 Guardar
               </button>
@@ -374,10 +464,14 @@ const GestionUsuarios = () => {
         </div>
       )}
 
+      {/* Modal para cambiar rol */}
       {showRoleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">Cambiar Rol de Usuario</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96 animate-fade-in">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <PencilSquareIcon className="h-6 w-6 text-purple-600" />
+              Cambiar Rol de Usuario
+            </h2>
             <p className="mb-4">Usuario: {selectedUser?.nombre}</p>
             <select
               value={newRole}
@@ -390,16 +484,16 @@ const GestionUsuarios = () => {
               <option value={1}>Administrador</option>
               <option value={2}>Vendedor</option>
             </select>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowRoleModal(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 mr-2"
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-all duration-200"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleChangeRole}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
               >
                 Guardar
               </button>
@@ -407,6 +501,17 @@ const GestionUsuarios = () => {
           </div>
         </div>
       )}
+      <style>
+        {`
+          .animate-fade-in {
+            animation: fadeIn 0.7s;
+          }
+          @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+          }
+        `}
+      </style>
     </div>
   );
 };

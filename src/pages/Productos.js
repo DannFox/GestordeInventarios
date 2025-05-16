@@ -1,14 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  PlusCircleIcon,
+  ArrowLeftCircleIcon,
+  MagnifyingGlassIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  CubeIcon,
+  TagIcon,
+  ClipboardDocumentListIcon,
+  CurrencyDollarIcon,
+  ArchiveBoxIcon, // <-- Agrega esta línea
+} from "@heroicons/react/24/outline";
 
 const Productos = () => {
   const [productos, setProductos] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1); // Página actual
-  const [totalPages, setTotalPages] = useState(1); // Total de páginas
-  const [isAdmin, setIsAdmin] = useState(false); // Estado para verificar si el usuario es admin
-  const pageSize = 10; // Tamaño de página
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const pageSize = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,13 +43,16 @@ const Productos = () => {
     const fetchProductosYCategorias = async () => {
       try {
         const [productosResponse, categoriasResponse] = await Promise.all([
-          fetch(`http://localhost:5074/api/Products?Page=${currentPage}&PageSize=${pageSize}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }),
+          fetch(
+            `http://localhost:5074/api/Products?Page=${currentPage}&PageSize=${pageSize}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          ),
           fetch("http://localhost:5074/api/Categoria", {
             method: "GET",
             headers: {
@@ -102,19 +118,24 @@ const Productos = () => {
 
     if (window.confirm("¿Estás seguro de que deseas eliminar este producto?")) {
       try {
-        const response = await fetch(`http://localhost:5074/api/Products/${idProducto}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `http://localhost:5074/api/Products/${idProducto}`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Error al eliminar el producto");
         }
 
-        setProductos(productos.filter((producto) => producto.idProducto !== idProducto));
+        setProductos(
+          productos.filter((producto) => producto.idProducto !== idProducto)
+        );
         alert("Producto eliminado exitosamente.");
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
@@ -149,29 +170,33 @@ const Productos = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <h1 className="text-2xl font-bold text-center text-green-600 mb-6">
+      <h1 className="text-3xl font-bold text-center text-green-600 mb-8 flex items-center justify-center gap-2">
+        <ClipboardDocumentListIcon className="h-8 w-8 text-green-600" />
         Lista de Productos
       </h1>
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Buscar producto..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600"
-        />
-      </div>
-      <div className="flex justify-between mb-4">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="relative w-full">
+          <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Buscar producto..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600 transition-all duration-200"
+          />
+        </div>
         <button
           onClick={handleGoToDashboard}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
         >
+          <ArrowLeftCircleIcon className="h-5 w-5" />
           Ir al Dashboard
         </button>
         <button
           onClick={handleAddProduct}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-300"
+          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
         >
+          <PlusCircleIcon className="h-5 w-5" />
           Agregar Producto
         </button>
       </div>
@@ -179,17 +204,40 @@ const Productos = () => {
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-green-600 text-white">
-              <th className="px-4 py-2">Nombre</th>
-              <th className="px-4 py-2">Descripción</th>
-              <th className="px-4 py-2">Categoría</th>
-              <th className="px-4 py-2">Stock</th>
-              <th className="px-4 py-2">Precio Unitario</th>
-              <th className="px-4 py-2">Acciones</th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <CubeIcon className="h-5 w-5" /> Nombre
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <TagIcon className="h-5 w-5" /> Descripción
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <ClipboardDocumentListIcon className="h-5 w-5" /> Categoría
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <ArchiveBoxIcon className="h-5 w-5" /> Stock
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <CurrencyDollarIcon className="h-5 w-5" /> Precio Unitario
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredProductos.map((producto) => (
-              <tr key={producto.idProducto} className="border-b">
+              <tr
+                key={producto.idProducto}
+                className="border-b hover:bg-green-50 transition-colors duration-200"
+              >
                 <td className="px-4 py-2 text-center">{producto.nombre}</td>
                 <td className="px-4 py-2 text-center">{producto.descripcion}</td>
                 <td className="px-4 py-2 text-center">{producto.nombreCategoria}</td>
@@ -200,26 +248,29 @@ const Productos = () => {
                     currency: "USD",
                   })}
                 </td>
-                <td className="px-4 py-2 text-center">
+                <td className="px-4 py-2 text-center flex flex-wrap gap-2 justify-center">
                   <button
                     onClick={() => handleViewProduct(producto.idProducto)}
-                    className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2"
+                    className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                    title="Ver"
                   >
-                    Ver
+                    <EyeIcon className="h-5 w-5" />
                   </button>
                   {isAdmin && (
                     <>
                       <button
                         onClick={() => handleEditProduct(producto.idProducto)}
-                        className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2"
+                        className="flex items-center gap-1 bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                        title="Editar"
                       >
-                        Editar
+                        <PencilSquareIcon className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(producto.idProducto)}
-                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                        className="flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                        title="Eliminar"
                       >
-                        Eliminar
+                        <TrashIcon className="h-5 w-5" />
                       </button>
                     </>
                   )}
@@ -233,10 +284,13 @@ const Productos = () => {
         <button
           onClick={handlePreviousPage}
           disabled={currentPage === 1}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === 1 ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            currentPage === 1
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95"
           }`}
         >
+          <ArrowLeftCircleIcon className="h-5 w-5" />
           Anterior
         </button>
         <span className="text-lg font-bold">
@@ -245,11 +299,14 @@ const Productos = () => {
         <button
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === totalPages ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            currentPage === totalPages
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95"
           }`}
         >
           Siguiente
+          <ArrowLeftCircleIcon className="h-5 w-5 rotate-180" />
         </button>
       </div>
     </div>

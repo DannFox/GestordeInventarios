@@ -51,6 +51,14 @@ const App = () => {
           }
           />
           <Route
+          path="/productos/agregar"
+          element={
+            <PrivateRoute>
+              <NuevoProducto />
+            </PrivateRoute>
+          }
+          />
+          <Route
           path="/productos/editar/:idProducto"
           element={
             <PrivateRoute>

@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  PlusCircleIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  ClipboardDocumentListIcon,
+  MagnifyingGlassIcon,
+  ArrowLeftCircleIcon,
+  Squares2X2Icon,
+} from "@heroicons/react/24/outline";
 
 const Categoria = () => {
   const [categorias, setCategorias] = useState([]);
@@ -8,9 +17,10 @@ const Categoria = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedCategoria, setSelectedCategoria] = useState(null); // Categoría seleccionada
-  const [categoriaProductos, setCategoriaProductos] = useState([]); // Productos de la categoría seleccionada
-  const [showCategoriaDetails, setShowCategoriaDetails] = useState(false); // Mostrar/ocultar modal de detalles
+  const [selectedCategoria, setSelectedCategoria] = useState(null);
+  const [categoriaProductos, setCategoriaProductos] = useState([]);
+  const [showCategoriaDetails, setShowCategoriaDetails] = useState(false);
+  const [busqueda, setBusqueda] = useState(""); // Nuevo estado para el buscador
   const pageSize = 10;
   const navigate = useNavigate();
 
@@ -60,8 +70,13 @@ const Categoria = () => {
   const fetchCategoriaProductos = async (idCategoria) => {
     const token = localStorage.getItem("token");
 
+    if (!idCategoria) {
+      alert("ID de categoría inválido.");
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:5074/api/Products/PorCategoria/${idCategoria}`, {
+      const response = await fetch(`http://localhost:5074/api/Categoria/${idCategoria}/productos`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +89,7 @@ const Categoria = () => {
       }
 
       const data = await response.json();
-      setCategoriaProductos(data);
+      setCategoriaProductos(data.productos || []);
       setShowCategoriaDetails(true);
     } catch (error) {
       console.error("Error al obtener los productos de la categoría:", error);
@@ -109,7 +124,7 @@ const Categoria = () => {
       .then((categoriaAgregada) => {
         setCategorias((prevCategorias) => [
           ...prevCategorias,
-          { idCategoria: categoriaAgregada.idCategoria, nombre: categoriaAgregada.nombre },
+          { id_categoria: categoriaAgregada.idCategoria, nombre: categoriaAgregada.nombre },
         ]);
         setNuevaCategoria(""); // Limpiar el campo de entrada
         alert("Categoría agregada exitosamente.");
@@ -144,7 +159,7 @@ const Categoria = () => {
         }
 
         setCategorias((prevCategorias) =>
-          prevCategorias.filter((categoria) => categoria.idCategoria !== id)
+          prevCategorias.filter((categoria) => categoria.id_categoria !== id)
         );
 
         alert("Categoría eliminada exitosamente.");
@@ -174,7 +189,7 @@ const Categoria = () => {
       .then(() => {
         setCategorias(
           categorias.map((categoria) =>
-            categoria.idCategoria === id
+            categoria.id_categoria === id
               ? { ...categoria, nombre: nuevoNombre }
               : categoria
           )
@@ -197,6 +212,11 @@ const Categoria = () => {
     }
   };
 
+  // Filtrar categorías por nombre según la búsqueda
+  const categoriasFiltradas = categorias.filter((categoria) =>
+    categoria.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -207,24 +227,43 @@ const Categoria = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <button
           onClick={() => navigate("/dashboard")}
-          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+          className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
         >
+          <ArrowLeftCircleIcon className="h-5 w-5" />
           Volver al Dashboard
         </button>
       </div>
 
       <div className="flex justify-center items-center mb-6">
-        <h1 className="text-2xl font-bold text-blue-600">
+        <h1 className="text-2xl font-bold text-blue-600 flex items-center gap-2">
+          <Squares2X2Icon className="h-7 w-7" />
           Gestión de Categorías
         </h1>
       </div>
 
+      {/* Buscador de categorías */}
+      <div className="flex justify-center mb-6">
+        <div className="relative w-1/2">
+          <MagnifyingGlassIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar categoría por nombre..."
+            className="w-full pl-10 pr-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600 transition-all duration-200"
+          />
+        </div>
+      </div>
+
       {isAdmin && (
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-blue-600 mb-4">Agregar Categoría</h2>
+          <h2 className="text-xl font-bold text-blue-600 mb-4 flex items-center gap-2">
+            <PlusCircleIcon className="h-6 w-6" />
+            Agregar Categoría
+          </h2>
           <div className="flex items-center gap-4">
             <input
               type="text"
@@ -235,8 +274,9 @@ const Categoria = () => {
             />
             <button
               onClick={handleAddCategoria}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="flex items-center gap-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
             >
+              <PlusCircleIcon className="h-5 w-5" />
               Agregar
             </button>
           </div>
@@ -247,15 +287,19 @@ const Categoria = () => {
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-blue-600 text-white">
-              <th className="px-4 py-2">Nombre</th>
-              <th className="px-4 py-2">Acciones</th>
+              <th className="px-4 py-2 text-center">
+                <span className="flex items-center gap-1 justify-center">
+                  <ClipboardDocumentListIcon className="h-5 w-5" /> Nombre
+                </span>
+              </th>
+              <th className="px-4 py-2 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {categorias.map((categoria) => (
-              <tr key={categoria.idCategoria} className="border-b">
+            {categoriasFiltradas.map((categoria) => (
+              <tr key={categoria.id_categoria} className="border-b hover:bg-blue-50 transition-colors duration-200">
                 <td className="px-4 py-2 text-center">{categoria.nombre}</td>
-                <td className="px-4 py-2 text-center">
+                <td className="px-4 py-2 text-center flex flex-wrap gap-2 justify-center">
                   {isAdmin && (
                     <>
                       <button
@@ -265,16 +309,20 @@ const Categoria = () => {
                             alert("El nombre de la categoría no puede estar vacío.");
                             return;
                           }
-                          handleUpdateCategoria(categoria.idCategoria, nuevoNombre);
+                          handleUpdateCategoria(categoria.id_categoria, nuevoNombre);
                         }}
-                        className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
+                        className="flex items-center gap-1 bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                        title="Editar"
                       >
+                        <PencilSquareIcon className="h-5 w-5" />
                         Editar
                       </button>
                       <button
-                        onClick={() => handleDeleteCategoria(categoria.idCategoria)}
-                        className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 mr-2"
+                        onClick={() => handleDeleteCategoria(categoria.id_categoria)}
+                        className="flex items-center gap-1 bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 transition-all duration-200 hover:scale-105 active:scale-95"
+                        title="Eliminar"
                       >
+                        <TrashIcon className="h-5 w-5" />
                         Eliminar
                       </button>
                     </>
@@ -282,10 +330,12 @@ const Categoria = () => {
                   <button
                     onClick={() => {
                       setSelectedCategoria(categoria);
-                      fetchCategoriaProductos(categoria.idCategoria);
+                      fetchCategoriaProductos(categoria.id_categoria);
                     }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                    title="Ver Productos"
                   >
+                    <ClipboardDocumentListIcon className="h-5 w-5" />
                     Ver Productos
                   </button>
                 </td>
@@ -299,10 +349,13 @@ const Categoria = () => {
         <button
           onClick={handlePreviousPage}
           disabled={currentPage === 1}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === 1 ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            currentPage === 1
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95"
           }`}
         >
+          <ArrowLeftCircleIcon className="h-5 w-5" />
           Anterior
         </button>
         <span className="text-lg font-bold">
@@ -311,18 +364,22 @@ const Categoria = () => {
         <button
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 rounded-lg ${
-            currentPage === totalPages ? "bg-gray-400" : "bg-blue-600 text-white hover:bg-blue-700"
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+            currentPage === totalPages
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105 active:scale-95"
           }`}
         >
           Siguiente
+          <ArrowLeftCircleIcon className="h-5 w-5 rotate-180" />
         </button>
       </div>
 
       {showCategoriaDetails && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
               Productos de la Categoría: {selectedCategoria?.nombre}
             </h2>
             <ul className="mb-4">
@@ -339,7 +396,7 @@ const Categoria = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setShowCategoriaDetails(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-all duration-200 hover:scale-105"
               >
                 Cerrar
               </button>

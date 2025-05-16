@@ -3,6 +3,11 @@ import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
 import { jwtDecode } from "jwt-decode";
 import { Link } from "react-router-dom";
+import { CubeIcon, ArchiveBoxIcon, CurrencyDollarIcon, HomeIcon, ClipboardDocumentListIcon, Squares2X2Icon, UserCircleIcon, ArrowRightOnRectangleIcon, WrenchScrewdriverIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Dashboard = () => {
   const [productos, setProductos] = useState([]);
@@ -99,6 +104,44 @@ const Dashboard = () => {
     window.location.href = "/login";
   };
 
+  // Exportar a Excel
+  const exportarExcel = () => {
+    const datos = productos.map((p) => ({
+      Nombre: p.nombre,
+      Descripción: p.descripcion,
+      Categoría: p.nombreCategoria,
+      Stock: p.stock,
+      "Precio Unitario": p.precioUnitario,
+    }));
+    const ws = XLSX.utils.json_to_sheet(datos);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Productos");
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+    saveAs(data, "productos.xlsx");
+  };
+
+  // Exportar a PDF
+  const exportarPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Listado de Productos", 14, 16);
+    const tableColumn = ["Nombre", "Descripción", "Categoría", "Stock", "Precio Unitario"];
+    const tableRows = productos.map((p) => [
+      p.nombre,
+      p.descripcion,
+      p.nombreCategoria,
+      p.stock,
+      p.precioUnitario,
+    ]);
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 22,
+      styles: { fontSize: 10 },
+    });
+    doc.save("productos.pdf");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-green-100">
@@ -151,41 +194,60 @@ const Dashboard = () => {
       {/* Encabezado */}
       <header className="bg-green-600 text-white p-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-lg font-bold">Gestor de Inventario</h1>
+          <h1 className="text-lg font-bold flex items-center gap-2">
+            <HomeIcon className="h-6 w-6 inline-block" />
+            Gestor de Inventario
+          </h1>
           <nav>
-            <ul className="flex space-x-4 relative">
+            <ul className="flex space-x-4 relative items-center">
               <li>
-                <Link to="/dashboard" className="hover:underline">
+                <Link to="/dashboard" className="hover:underline flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95">
+                  <HomeIcon className="h-5 w-5" />
                   Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/productos" className="hover:underline">
+                <Link to="/productos" className="hover:underline flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95">
+                  <ClipboardDocumentListIcon className="h-5 w-5" />
                   Productos
                 </Link>
               </li>
               <li>
-                <Link to="/categorias" className="hover:underline">
+                <Link to="/categorias" className="hover:underline flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95">
+                  <Squares2X2Icon className="h-5 w-5" />
                   Categorías
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/productos/agregar"
+                  className="hover:underline flex items-center gap-1 bg-blue-500 px-3 py-1 rounded text-white transition-all duration-200 hover:bg-blue-600 hover:scale-105 hover:shadow-lg active:scale-95"
+                  title="Agregar Producto"
+                >
+                  <PlusCircleIcon className="h-5 w-5" />
+                  Agregar Producto
                 </Link>
               </li>
               {isAdmin && (
                 <li className="relative" ref={adminMenuRef}>
                   <button
                     onClick={() => setShowAdminMenu(!showAdminMenu)}
-                    className="hover:underline"
+                    className="hover:underline flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95"
                   >
+                    <WrenchScrewdriverIcon className="h-5 w-5" />
                     Administración
                   </button>
                   {showAdminMenu && (
                     <ul className="absolute bg-white text-black shadow-md rounded-lg mt-2 p-2 space-y-2">
                       <li>
-                        <Link to="/admin/usuarios" className="hover:underline block px-4 py-2">
+                        <Link to="/admin/usuarios" className="hover:underline block px-4 py-2 flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95">
+                          <UserCircleIcon className="h-5 w-5" />
                           Gestión de Usuarios
                         </Link>
                       </li>
                       <li>
-                        <Link to="/admin/roles" className="hover:underline block px-4 py-2">
+                        <Link to="/admin/roles" className="hover:underline block px-4 py-2 flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95">
+                          <WrenchScrewdriverIcon className="h-5 w-5" />
                           Gestión de Roles
                         </Link>
                       </li>
@@ -194,7 +256,8 @@ const Dashboard = () => {
                 </li>
               )}
               <li>
-                <button onClick={handleLogout} className="hover:underline">
+                <button onClick={handleLogout} className="hover:underline flex items-center gap-1 transition-all duration-200 hover:scale-105 hover:text-blue-200 active:scale-95">
+                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
                   Cerrar Sesión
                 </button>
               </li>
@@ -212,17 +275,36 @@ const Dashboard = () => {
           <p className="text-lg font-semibold">{mensajeDelDia}</p>
         </div>
 
+        {/* Botones de exportación */}
+        <div className="flex gap-4 justify-end mb-4">
+          <button
+            onClick={exportarExcel}
+            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+          >
+            Exportar a Excel
+          </button>
+          <button
+            onClick={exportarPDF}
+            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-all duration-200 hover:scale-105 hover:shadow-lg active:scale-95"
+          >
+            Exportar a PDF
+          </button>
+        </div>
+
         {/* Tarjetas de estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white shadow-md rounded-lg p-4 text-center">
+          <div className="bg-white shadow-md rounded-lg p-4 text-center flex flex-col items-center">
+            <CubeIcon className="h-8 w-8 text-green-500 mb-2" />
             <h2 className="text-xl font-bold text-green-600">{totalProductos}</h2>
             <p className="text-gray-600 text-sm">Productos en total</p>
           </div>
-          <div className="bg-white shadow-md rounded-lg p-4 text-center">
+          <div className="bg-white shadow-md rounded-lg p-4 text-center flex flex-col items-center">
+            <ArchiveBoxIcon className="h-8 w-8 text-blue-500 mb-2" />
             <h2 className="text-xl font-bold text-green-600">{totalStock}</h2>
             <p className="text-gray-600 text-sm">Stock total</p>
           </div>
-          <div className="bg-white shadow-md rounded-lg p-4 text-center">
+          <div className="bg-white shadow-md rounded-lg p-4 text-center flex flex-col items-center">
+            <CurrencyDollarIcon className="h-8 w-8 text-yellow-500 mb-2" />
             <h2 className="text-xl font-bold text-green-600">
               {totalPrecio.toLocaleString("es-EC", {
                 style: "currency",
