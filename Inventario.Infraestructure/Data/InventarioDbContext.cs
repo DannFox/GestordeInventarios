@@ -15,6 +15,7 @@ namespace Inventario.Infraestructure.Data
         }
         public DbSet<Productos> Productos { get; set; }
         public DbSet<Categorias> Categorias { get; set; }
+        public DbSet<Imagenes_Productos> Imagenes_Productos { get; set; }
         public DbSet<Usuarios> Usuarios { get; set; }
         public DbSet<Roles> Roles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -70,6 +71,16 @@ namespace Inventario.Infraestructure.Data
             modelBuilder.Entity<Roles>(entity =>
             {
                 entity.HasKey(e => e.id_rol);
+            });
+
+            modelBuilder.Entity<Imagenes_Productos>(entity =>
+            {
+                entity.HasKey(e => e.id_imagen);
+                entity.HasOne(i => i.productos)
+                    .WithMany()
+                    .HasForeignKey(i => i.id_producto)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }
