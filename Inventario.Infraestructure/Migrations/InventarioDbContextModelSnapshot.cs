@@ -39,6 +39,28 @@ namespace Inventario.Infraestructure.Migrations
                     b.ToTable("Categorias");
                 });
 
+            modelBuilder.Entity("Inventario.Domain.Entities.Imagenes_Productos", b =>
+                {
+                    b.Property<int>("id_imagen")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("id_imagen"));
+
+                    b.Property<int>("id_producto")
+                        .HasColumnType("int");
+
+                    b.Property<string>("url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("id_imagen");
+
+                    b.HasIndex("id_producto");
+
+                    b.ToTable("Imagenes_Productos");
+                });
+
             modelBuilder.Entity("Inventario.Domain.Entities.Productos", b =>
                 {
                     b.Property<int>("id_producto")
@@ -128,6 +150,17 @@ namespace Inventario.Infraestructure.Migrations
                     b.HasIndex("id_rol");
 
                     b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("Inventario.Domain.Entities.Imagenes_Productos", b =>
+                {
+                    b.HasOne("Inventario.Domain.Entities.Productos", "productos")
+                        .WithMany()
+                        .HasForeignKey("id_producto")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("productos");
                 });
 
             modelBuilder.Entity("Inventario.Domain.Entities.Productos", b =>
