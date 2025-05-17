@@ -204,6 +204,7 @@ const Productos = () => {
         <table className="table-auto w-full bg-white shadow-md rounded-lg">
           <thead>
             <tr className="bg-green-600 text-white">
+              <th className="px-4 py-2 text-center">Imagen</th>
               <th className="px-4 py-2 text-center">
                 <span className="flex items-center gap-1 justify-center">
                   <CubeIcon className="h-5 w-5" /> Nombre
@@ -238,6 +239,20 @@ const Productos = () => {
                 key={producto.idProducto}
                 className="border-b hover:bg-green-50 transition-colors duration-200"
               >
+                <td className="px-4 py-2 text-center">
+                  {producto.urlImagenString ? (
+                    <img
+                      src={`http://localhost:5074/${producto.urlImagenString.replace(
+                        /^wwwroot[\\/]/,
+                        ""
+                      )}`}
+                      alt={producto.nombre}
+                      className="h-16 w-16 object-cover rounded mx-auto"
+                    />
+                  ) : (
+                    <span className="text-gray-400 italic">Sin imagen</span>
+                  )}
+                </td>
                 <td className="px-4 py-2 text-center">{producto.nombre}</td>
                 <td className="px-4 py-2 text-center">{producto.descripcion}</td>
                 <td className="px-4 py-2 text-center">{producto.nombreCategoria}</td>
@@ -248,32 +263,34 @@ const Productos = () => {
                     currency: "USD",
                   })}
                 </td>
-                <td className="px-4 py-2 text-center flex flex-wrap gap-2 justify-center">
-                  <button
-                    onClick={() => handleViewProduct(producto.idProducto)}
-                    className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-all duration-200 hover:scale-105 active:scale-95"
-                    title="Ver"
-                  >
-                    <EyeIcon className="h-5 w-5" />
-                  </button>
-                  {isAdmin && (
-                    <>
-                      <button
-                        onClick={() => handleEditProduct(producto.idProducto)}
-                        className="flex items-center gap-1 bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition-all duration-200 hover:scale-105 active:scale-95"
-                        title="Editar"
-                      >
-                        <PencilSquareIcon className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(producto.idProducto)}
-                        className="flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-all duration-200 hover:scale-105 active:scale-95"
-                        title="Eliminar"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    </>
-                  )}
+                <td className="px-4 py-2 text-center">
+                  <div className="flex justify-center flex-wrap gap-2">
+                    <button
+                      onClick={() => handleViewProduct(producto.idProducto)}
+                      className="flex items-center gap-1 bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                      title="Ver"
+                    >
+                      <EyeIcon className="h-5 w-5" />
+                    </button>
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() => handleEditProduct(producto.idProducto)}
+                          className="flex items-center gap-1 bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                          title="Editar"
+                        >
+                          <PencilSquareIcon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(producto.idProducto)}
+                          className="flex items-center gap-1 bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-all duration-200 hover:scale-105 active:scale-95"
+                          title="Eliminar"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

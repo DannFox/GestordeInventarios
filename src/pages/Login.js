@@ -62,7 +62,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-108px)] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-4">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 p-2">
       <div className="bg-white shadow-2xl rounded-2xl flex w-full max-w-4xl overflow-hidden animate-fade-in">
         {/* Imagen o lado visual */}
         <div className="hidden md:flex flex-col justify-center items-center bg-blue-600 text-white w-1/2 p-8">

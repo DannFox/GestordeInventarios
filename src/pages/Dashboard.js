@@ -122,17 +122,22 @@ const Dashboard = () => {
   };
 
   // Exportar a PDF
-  const exportarPDF = () => {
+  const exportarPDF = async () => {
     const doc = new jsPDF();
     doc.text("Listado de Productos", 14, 16);
     const tableColumn = ["Nombre", "Descripción", "Categoría", "Stock", "Precio Unitario"];
-    const tableRows = productos.map((p) => [
-      p.nombre,
-      p.descripcion,
-      p.nombreCategoria,
-      p.stock,
-      p.precioUnitario,
-    ]);
+    const tableRows = [];
+
+    for (const p of productos) {
+      tableRows.push([
+        p.nombre,
+        p.descripcion,
+        p.nombreCategoria,
+        p.stock,
+        p.precioUnitario,
+      ]);
+    }
+
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,

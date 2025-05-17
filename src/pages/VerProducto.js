@@ -92,6 +92,15 @@ const VerProducto = () => {
             Detalles del Producto
           </h1>
           <div className="space-y-5">
+            {producto.urlImagenString && (
+              <div className="flex flex-col items-center">
+                <img
+                  src={`http://localhost:5074/${producto.urlImagenString.replace(/^wwwroot[\\/]/, '')}`}
+                  alt={producto.nombre}
+                  className="max-h-96 max-w-full rounded-lg shadow mb-4"
+                />
+              </div>
+            )}
             <div className="flex items-center gap-2 text-lg">
               <TagIcon className="h-5 w-5 text-green-500" />
               <span className="font-semibold">Nombre:</span>
