@@ -85,7 +85,8 @@ namespace Inventario.Application.Services
                 Descripcion = p.descripcion,
                 PrecioUnitario = p.precio_unitario,
                 Stock = p.stock,
-                IdCategoria = p.id_categoria
+                IdCategoria = p.id_categoria,
+                UrlImagenString = p.UrlImagen,
             });
 
             return (productosDto, totalItems);
@@ -104,7 +105,8 @@ namespace Inventario.Application.Services
                 Descripcion = producto.descripcion,
                 PrecioUnitario = producto.precio_unitario,
                 Stock = producto.stock,
-                IdCategoria = producto.id_categoria
+                IdCategoria = producto.id_categoria,
+                UrlImagenString = producto.UrlImagen
             };
         }
 

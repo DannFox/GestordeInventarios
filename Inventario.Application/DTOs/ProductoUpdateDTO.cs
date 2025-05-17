@@ -11,5 +11,6 @@ namespace Inventario.API.DTOs
         public int Stock { get; set; }
         public int IdCategoria { get; set; }
         public IFormFile UrlImagen { get; set; }
+        public string UrlImagenString { get; set; }
     }
 }
