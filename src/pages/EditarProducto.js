@@ -16,6 +16,7 @@ const EditarProducto = () => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [nuevaImagen, setNuevaImagen] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -64,18 +65,51 @@ const EditarProducto = () => {
     setProducto({ ...producto, [name]: value });
   };
 
+  const handleImageChange = (e) => {
+    setNuevaImagen(e.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch(`http://localhost:5074/api/Products/${idProducto}`, {
-        method: "PUT",
-        headers: {
+      let body;
+      let headers;
+
+      if (nuevaImagen) {
+        // Si hay nueva imagen, usa FormData
+        body = new FormData();
+        body.append("idProducto", producto.idProducto); // <-- Agrega el ID aquí
+        body.append("nombre", producto.nombre);
+        body.append("descripcion", producto.descripcion);
+        body.append("idCategoria", producto.idCategoria);
+        body.append("stock", producto.stock);
+        body.append("precioUnitario", producto.precioUnitario);
+        body.append("UrlImagen", nuevaImagen);
+        headers = {
+          Authorization: `Bearer ${token}`,
+        };
+      } else {
+        // Si no hay nueva imagen, envía JSON
+        body = JSON.stringify({
+          idProducto: producto.idProducto, // <-- Agrega el ID aquí
+          nombre: producto.nombre,
+          descripcion: producto.descripcion,
+          idCategoria: producto.idCategoria,
+          stock: producto.stock,
+          precioUnitario: producto.precioUnitario,
+        });
+        headers = {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(producto),
+        };
+      }
+
+      const response = await fetch(`http://localhost:5074/api/Products/${idProducto}`, {
+        method: "PUT",
+        headers,
+        body,
       });
 
       if (!response.ok) {
@@ -122,7 +156,7 @@ const EditarProducto = () => {
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" encType="multipart/form-data">
           <div>
             <label className="block text-gray-700 font-semibold mb-1 flex items-center gap-1">
               <TagIcon className="h-5 w-5 text-green-500" />
@@ -200,6 +234,27 @@ const EditarProducto = () => {
               min={0}
               step="0.01"
               required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 font-semibold mb-1 flex items-center gap-1">
+              Imagen actual
+            </label>
+            {producto.urlImagenString ? (
+              <img
+                src={`http://localhost:5074/${producto.urlImagenString.replace(/^wwwroot[\\/]/, "")}`}
+                alt={producto.nombre}
+                className="h-24 mb-2 rounded shadow"
+              />
+            ) : (
+              <span className="text-gray-400 italic">Sin imagen</span>
+            )}
+            <input
+              type="file"
+              name="UrlImagen"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200"
             />
           </div>
           <div className="flex justify-between mt-6">
