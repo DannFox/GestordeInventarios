@@ -66,6 +66,11 @@ namespace Inventario.Application.Services
             var producto = await _context.Productos.FindAsync(id);
             if (producto == null) throw new KeyNotFoundException("Producto no encontrado");
 
+            if (!string.IsNullOrEmpty(producto.UrlImagen) && File.Exists(producto.UrlImagen))
+            {
+                File.Delete(producto.UrlImagen); // Eliminar la imagen
+            }
+
             _context.Productos.Remove(producto);
             await _context.SaveChangesAsync();
         }
@@ -120,6 +125,17 @@ namespace Inventario.Application.Services
             productoExistente.precio_unitario = producto.PrecioUnitario;
             productoExistente.stock = producto.Stock;
             productoExistente.id_categoria = producto.IdCategoria;
+
+            if  (producto.UrlImagen != null)
+            {
+                if (!string.IsNullOrEmpty(productoExistente.UrlImagen) && File.Exists(productoExistente.UrlImagen))
+                {
+                    File.Delete(productoExistente.UrlImagen); // Eliminar la imagen anterior
+                }
+
+                var nuevaImagen = await SaveFile(producto.UrlImagen);
+                productoExistente.UrlImagen = nuevaImagen; // Actualizar la ruta de la imagen
+            }
 
             _context.Productos.Update(productoExistente);
             await _context.SaveChangesAsync();

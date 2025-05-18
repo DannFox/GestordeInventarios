@@ -5,6 +5,8 @@ Inventario API es un servicio RESTful para la gestión de productos, categorías y
 ## Características
 
 - **Productos**: Operaciones CRUD, carga y visualización de imágenes, filtrado por categoría.
+- **Actualización de imágenes**: Puedes actualizar la imagen de un producto usando el endpoint de actualización (`PUT /api/Products/{id}`). Si el producto ya tenía una imagen, se reemplaza por la nueva; si no tenía, se agrega.
+- **Eliminación de imágenes**: Al eliminar un producto, la imagen asociada también se elimina automáticamente del sistema de archivos.
 - **Categorías**: Operaciones CRUD, listado de productos por categoría.
 - **Usuarios**: Registro, gestión de roles, restablecimiento de contraseña/correo, endpoints solo para administradores.
 - **Autenticación**: Basada en JWT, con control de acceso por roles.
@@ -49,10 +51,12 @@ Inventario API es un servicio RESTful para la gestión de productos, categorías y
   Crea un producto (usar multipart/form-data para cargar imagen).
 
 - `PUT /api/Products/{id}`  
-  Actualiza un producto.
+  Actualiza un producto.  
+  **Nota:** Puedes enviar una nueva imagen en el formulario. Si el producto ya tenía una imagen, será reemplazada; si no tenía, se agregará.
 
 - `DELETE /api/Products/{id}`  
-  Elimina un producto.
+  Elimina un producto.  
+  **Nota:** Al eliminar un producto, la imagen asociada también se elimina del sistema de archivos.
 
 - `GET /api/Products/PorCategoria/{idCategoria}`  
   Lista productos por categoría.
@@ -105,6 +109,8 @@ Inventario API es un servicio RESTful para la gestión de productos, categorías y
 - Las imágenes se cargan mediante los endpoints de productos y se almacenan en `wwwroot/images`.
 - La API retorna una URL relativa (por ejemplo, `/images/archivo.jpg`) en la propiedad `UrlImagenString`.
 - Las imágenes son accesibles vía `https://<host>/images/<archivo>`.
+- **Actualización de imágenes:** Puedes actualizar la imagen de un producto enviando un nuevo archivo en el endpoint de actualización.
+- **Eliminación de imágenes:** Al eliminar un producto, la imagen asociada también se elimina del sistema de archivos.
 
 ## Paginación
 
