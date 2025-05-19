@@ -69,18 +69,28 @@ const Productos = () => {
         const productosData = await productosResponse.json();
         const categoriasData = await categoriasResponse.json();
 
-        const productosConNombreCategoria = productosData.map((producto) => {
-          const categoria = categoriasData.find(
-            (cat) => cat.id_categoria === producto.idCategoria
-          );
-          return {
-            ...producto,
-            nombreCategoria: categoria ? categoria.nombre : "Sin categoría",
-          };
-        });
+        const productosConNombreCategoria = productosData.items
+          ? productosData.items.map((producto) => {
+              const categoria = categoriasData.find(
+                (cat) => cat.id_categoria === producto.idCategoria
+              );
+              return {
+                ...producto,
+                nombreCategoria: categoria ? categoria.nombre : "Sin categoría",
+              };
+            })
+          : productosData.map((producto) => {
+              const categoria = categoriasData.find(
+                (cat) => cat.id_categoria === producto.idCategoria
+              );
+              return {
+                ...producto,
+                nombreCategoria: categoria ? categoria.nombre : "Sin categoría",
+              };
+            });
 
         setProductos(productosConNombreCategoria);
-        setTotalPages(1); // Si no hay paginación en la respuesta, asumimos una sola página
+        setTotalPages(productosData.totalPages || 1); // <-- Aquí se usa el valor real de la API
         setLoading(false);
       } catch (error) {
         console.error("Error al obtener productos y categorías:", error);

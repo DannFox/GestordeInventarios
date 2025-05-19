@@ -29,11 +29,11 @@ const Dashboard = () => {
       } catch (error) {}
     }
 
-    // Obtener productos y categorías
+    // Obtener TODOS los productos y categorías para estadísticas globales
     const fetchProductosYCategorias = async () => {
       try {
         const [productosResponse, categoriasResponse] = await Promise.all([
-          fetch("http://localhost:5074/api/Products", {
+          fetch("http://localhost:5074/api/Products?Page=1&PageSize=10000", {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -56,8 +56,10 @@ const Dashboard = () => {
         const productosData = await productosResponse.json();
         const categoriasData = await categoriasResponse.json();
 
-        // Mapear idCategoria a nombreCategoria en los productos
-        const productosConNombreCategoria = productosData.map((producto) => {
+        // Usar todos los productos para estadísticas globales
+        const productosArray = productosData.items ? productosData.items : productosData;
+
+        const productosConNombreCategoria = productosArray.map((producto) => {
           const categoria = categoriasData.find((cat) => cat.id_categoria === producto.idCategoria);
           return {
             ...producto,
@@ -155,12 +157,12 @@ const Dashboard = () => {
     );
   }
 
-  // Calcular estadísticas
+  // Calcular estadísticas SOLO con los productos de la página actual
   const totalProductos = productos.length;
   const totalStock = productos.reduce((sum, producto) => sum + producto.stock, 0);
   const totalPrecio = productos.reduce((sum, producto) => sum + producto.precioUnitario * producto.stock, 0);
 
-  // Calcular datos para el gráfico de pastel
+  // Calcular datos para el gráfico de pastel SOLO con los productos de la página actual
   const categoriasUnicas = [...new Set(productos.map((producto) => producto.nombreCategoria))];
   const categoriasData = categoriasUnicas.map((categoria) => {
     const totalPorCategoria = productos
