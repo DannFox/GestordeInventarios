@@ -9,6 +9,6 @@ namespace Inventario.API.DTOs
         public float PrecioUnitario { get; set; }
         public int Stock { get; set; }
         public int IdCategoria { get; set; }
-        public IFormFile UrlImagen { get; set; }
+        public IFormFile? UrlImagen { get; set; }
     }
 }

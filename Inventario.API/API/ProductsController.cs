@@ -32,7 +32,14 @@ namespace Inventario.API.API
             Response.Headers.Add("X-Current-Page", Page.ToString());
             Response.Headers.Add("X-Page-Size", PageSize.ToString());
 
-            return Ok(productos);
+            return Ok(new
+            {
+                items = productos,
+                totalPages,
+                totalItems,
+                currentPage = Page,
+                pageSize = PageSize
+            });
         }
 
 
