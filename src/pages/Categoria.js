@@ -56,6 +56,7 @@ const Categoria = () => {
         }
 
         const data = await response.json();
+        // Manejo de paginación igual que en Productos.js
         setCategorias(data.items || data);
         setTotalPages(data.totalPages || 1);
         setLoading(false);
